@@ -227,13 +227,13 @@ public class PedidosServicios {
             StringBuilder sql = new StringBuilder();
             sql.append("SELECT p.Identificador, p.FechaPedido, p.Estado, p.Total, p.VendedorID, p.ClienteID ")
                .append("FROM pedido p ")
-               .append("JOIN detallepedido d ON p.Identificador = d.PedidoID ")
-               .append("JOIN producto pr ON d.ProductoID = pr.ProductoID ")
+               .append("JOIN pedido_producto d ON p.Identificador = d.PedidoID ") // Asegúrate que sea correcto
+               .append("JOIN producto pr ON d.ProductoID = pr.ID ") // Cambiado a pr.ID
                .append("WHERE p.VendedorID = ? AND MONTH(p.FechaPedido) = ? AND YEAR(p.FechaPedido) = ? ");
 
             // Agregar condición para categoría, si se proporciona
             if (idCategoria != null) {
-                sql.append("AND pr.CategoriaID = ? ");
+                sql.append("AND pr.CategoriaID = ? "); // Asegúrate de que esta columna existe en producto
             }
 
             sql.append("ORDER BY p.FechaPedido DESC");
@@ -269,6 +269,9 @@ public class PedidosServicios {
         }
         return pedidos;
     }
+
+
+
     
     public ArrayList<Pedido> getPedidosPorVendedorClienteYFecha(int idVendedor, int mes, int año, Integer idCliente) {
         ArrayList<Pedido> pedidos = new ArrayList<>();
@@ -327,7 +330,7 @@ public class PedidosServicios {
             StringBuilder sql = new StringBuilder();
             sql.append("SELECT p.Identificador, p.FechaPedido, p.Estado, p.Total, p.VendedorID, p.ClienteID ")
                .append("FROM pedido p ")
-               .append("JOIN DetallePedido dp ON p.Identificador = dp.PedidoID ") // Asegurar que se una con DetallePedido
+               .append("JOIN pedido_producto pp ON p.Identificador = pp.PedidoID ") // Cambiado a pedido_producto
                .append("WHERE p.VendedorID = ? AND MONTH(p.FechaPedido) = ? AND YEAR(p.FechaPedido) = ? ");
 
             // Agregar condición para idCliente, si se proporciona
@@ -337,7 +340,7 @@ public class PedidosServicios {
 
             // Agregar condición para idCategoria, si se proporciona
             if (idCategoria != null) {
-                sql.append("AND dp.CategoriaID = ? "); // Filtrar directamente por CategoriaID en DetallePedido
+                sql.append("AND pp.ProductoID IN (SELECT ID FROM producto WHERE CategoriaID = ?) "); // Filtrar por idCategoria
             }
 
             sql.append("ORDER BY p.FechaPedido DESC");
@@ -377,5 +380,6 @@ public class PedidosServicios {
         }
         return pedidos;
     }
+
 
 }
