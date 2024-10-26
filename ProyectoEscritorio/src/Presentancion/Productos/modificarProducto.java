@@ -4,11 +4,18 @@
  */
 package Presentancion.Productos;
 
+import java.awt.Image;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.List;
 import javax.swing.DefaultListModel;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import logica.Clases.Categoria;
 import logica.Clases.Producto;
 import logica.Clases.Proveedor;
@@ -26,6 +33,7 @@ public class modificarProducto extends javax.swing.JFrame {
     private DefaultListModel<String> listModel;
     private ProveedorServicios proveedorServicios;
     private ProductoServicios productoServicios;
+    private Producto producto;
     /**
      * Creates new form modificarProducto
      */
@@ -37,6 +45,8 @@ public class modificarProducto extends javax.swing.JFrame {
         proveedorServicios = new ProveedorServicios();
         productoServicios = new ProductoServicios();
         this.setTitle("Modificar Producto");
+        
+        producto = new Producto();
 
             setDefaultCloseOperation(javax.swing.WindowConstants.DO_NOTHING_ON_CLOSE);
             addWindowListener(new WindowAdapter() {
@@ -104,6 +114,15 @@ public class modificarProducto extends javax.swing.JFrame {
             setStock(producto.getStock());
             setCategoria(producto.getCategoria());
             
+            //cargamos la imagen en lblImagen
+            if (producto.getImagen() != null) {
+                ImageIcon icon = new ImageIcon(producto.getImagen());
+                Image scaledImage = icon.getImage().getScaledInstance(lblImagen.getWidth(), lblImagen.getHeight(), Image.SCALE_SMOOTH);
+                lblImagen.setIcon(new ImageIcon(scaledImage));
+            } else {
+                lblImagen.setIcon(null);//limpiamo la imagen si no se encuentra
+            }
+            
             cargarProveedoresAsociados();
         } else {
             JOptionPane.showMessageDialog(this, "Producto no encontrado.", "Error", JOptionPane.ERROR_MESSAGE);
@@ -137,6 +156,24 @@ public class modificarProducto extends javax.swing.JFrame {
         }
     }
 
+    private byte[] obtenerImagenBytes() {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Seleccionar Imagen");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes", "jpg", "jpeg", "png", "gif"));
+
+        int userSelection = fileChooser.showOpenDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                return Files.readAllBytes(file.toPath());
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Error al leer la imagen: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+        return null;
+    }
+
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -168,6 +205,8 @@ public class modificarProducto extends javax.swing.JFrame {
         btnLimpiarProveedores = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jListProveedores = new javax.swing.JList<>();
+        lblImagen = new javax.swing.JLabel();
+        btnSubirImg = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -273,16 +312,24 @@ public class modificarProducto extends javax.swing.JFrame {
 
         jScrollPane1.setViewportView(jListProveedores);
 
+        lblImagen.setBackground(new java.awt.Color(255, 255, 255));
+        lblImagen.setBorder(javax.swing.BorderFactory.createBevelBorder(javax.swing.border.BevelBorder.LOWERED));
+
+        btnSubirImg.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Presentancion/Iconos/icons8-upload-24.png"))); // NOI18N
+        btnSubirImg.setText("Subir Imagen");
+        btnSubirImg.setBorderPainted(false);
+        btnSubirImg.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSubirImgActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(120, 120, 120)
-                .addComponent(jLabel1)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap(50, Short.MAX_VALUE)
+                .addGap(20, 20, 20)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel8)
@@ -295,10 +342,6 @@ public class modificarProducto extends javax.swing.JFrame {
                             .addGap(18, 18, 18)
                             .addComponent(btnLimpiarProveedores)))
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(btnConfirmar, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(58, 58, 58)
-                        .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel3)
                             .addComponent(jLabel5)
@@ -310,57 +353,81 @@ public class modificarProducto extends javax.swing.JFrame {
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(CbCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                .addComponent(txtNombre, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
-                                .addComponent(txtSKU, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
-                                .addComponent(txtStock, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
-                                .addComponent(txtPrecioVenta, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)
-                                .addComponent(txtDescripcion, javax.swing.GroupLayout.DEFAULT_SIZE, 210, Short.MAX_VALUE)))))
-                .addGap(67, 67, 67))
+                                .addComponent(txtNombre)
+                                .addComponent(txtSKU)
+                                .addComponent(txtStock)
+                                .addComponent(txtPrecioVenta)
+                                .addComponent(txtDescripcion, javax.swing.GroupLayout.PREFERRED_SIZE, 210, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(lblImagen, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 92, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(btnSubirImg)
+                        .addGap(70, 70, 70)))
+                .addGap(12, 12, 12))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(btnConfirmar, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(58, 58, 58)
+                        .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 129, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(160, 160, 160))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addGap(213, 213, 213))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(26, 26, 26)
+                .addContainerGap(30, Short.MAX_VALUE)
                 .addComponent(jLabel1)
                 .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel2)
-                    .addComponent(txtNombre, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtDescripcion, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel3))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtSKU, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel4))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel5)
-                    .addComponent(txtPrecioVenta, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel6)
-                    .addComponent(txtStock, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(CbCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel7))
-                .addGap(18, 18, 18)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel8)
-                    .addComponent(CbProveedor, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel2)
+                            .addComponent(txtNombre, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtDescripcion, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(txtSKU, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel4))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel5)
+                            .addComponent(txtPrecioVenta, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel6)
+                            .addComponent(txtStock, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(18, 18, 18)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(CbCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel7))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 15, Short.MAX_VALUE)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jLabel8)
+                            .addComponent(CbProveedor, javax.swing.GroupLayout.PREFERRED_SIZE, 31, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(lblImagen, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
+                        .addComponent(btnSubirImg)))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAñadirProveedor)
                     .addComponent(btnLimpiarProveedores))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 33, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnCancelar, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnConfirmar, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(17, 17, 17))
+                .addGap(11, 11, 11))
         );
 
         pack();
@@ -416,8 +483,13 @@ public class modificarProducto extends javax.swing.JFrame {
             return;
         }
         
-        ProductoServicios productoServicios = new ProductoServicios();
-        
+        byte[] imagenNueva = producto.getImagen();
+        byte[] imagenAntigua = productoServicios.buscarProducto(id).getImagen();
+
+        //solo actualizar imagenAntigua si hay una imagen nueva
+        if (imagenNueva != null) {
+            imagenAntigua = imagenNueva;
+        }
         //verificamos si el nombre o el SKU ya están en uso
         Producto productoExistentePorNombre = productoServicios.buscarProductoPorNombre(nombre);
         Producto productoExistentePorSKU = productoServicios.buscarProductoPorSKU(sku);
@@ -430,13 +502,14 @@ public class modificarProducto extends javax.swing.JFrame {
         }
 
         //creamos un objeto Producto
-        Producto producto = new Producto();
-        producto.setId(id);
-        producto.setNombre(nombre);
-        producto.setDescripcion(descripcion);
-        producto.setSKU(sku);
-        producto.setPrecioVenta(precioVenta);
-        producto.setStock(stock);
+        Producto productoModificado = new Producto();
+        productoModificado.setId(id);
+        productoModificado.setNombre(nombre);
+        productoModificado.setDescripcion(descripcion);
+        productoModificado.setSKU(sku);
+        productoModificado.setPrecioVenta(precioVenta);
+        productoModificado.setStock(stock);
+        productoModificado.setImagen(imagenAntigua);
 
         //obtenemos la categoría seleccionada
         CategoriaServicios categoriaServicios = new CategoriaServicios();
@@ -445,10 +518,10 @@ public class modificarProducto extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Categoría seleccionada no encontrada.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        producto.setCategoria(categoriaSeleccionada);
+        productoModificado.setCategoria(categoriaSeleccionada);
 
         //modificamos el producto en la base de datos
-        boolean exito = productoServicios.modificarProducto(id, producto);
+        boolean exito = productoServicios.modificarProducto(id, productoModificado);
 
         if (exito) {
             //nos aseguramos que el JList de proveedores no esté vacío
@@ -461,7 +534,6 @@ public class modificarProducto extends javax.swing.JFrame {
             productoServicios.eliminarProveedoresPorProductoID(id);
 
             //agregamos las nuevas filas en producto_proveedor
-            ProveedorServicios proveedorServicios = new ProveedorServicios();
             for (int i = 0; i < listModel.size(); i++) {
                 String nombreProveedor = listModel.getElementAt(i);
                 int proveedorID = proveedorServicios.obtenerProveedorIDPorNombre(nombreProveedor);
@@ -519,6 +591,27 @@ public class modificarProducto extends javax.swing.JFrame {
         listModel.clear();
     }//GEN-LAST:event_btnLimpiarProveedoresActionPerformed
 
+    private void btnSubirImgActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSubirImgActionPerformed
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Seleccionar Imagen");
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Imágenes", "jpg", "jpeg", "png", "gif"));
+
+        int returnValue = fileChooser.showOpenDialog(this);
+        if (returnValue == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fileChooser.getSelectedFile();
+            try {
+                byte[] imagenBytes = Files.readAllBytes(selectedFile.toPath());
+                producto.setImagen(imagenBytes);
+                ImageIcon icon = new ImageIcon(imagenBytes);
+                Image scaledImage = icon.getImage().getScaledInstance(lblImagen.getWidth(), lblImagen.getHeight(), Image.SCALE_SMOOTH);
+                lblImagen.setIcon(new ImageIcon(scaledImage));
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Error al cargar la imagen.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }//GEN-LAST:event_btnSubirImgActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -561,6 +654,7 @@ public class modificarProducto extends javax.swing.JFrame {
     private javax.swing.JButton btnCancelar;
     private javax.swing.JButton btnConfirmar;
     private javax.swing.JButton btnLimpiarProveedores;
+    private javax.swing.JButton btnSubirImg;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -571,6 +665,7 @@ public class modificarProducto extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JList<String> jListProveedores;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JLabel lblImagen;
     private javax.swing.JTextField txtDescripcion;
     private javax.swing.JTextField txtNombre;
     private javax.swing.JTextField txtPrecioVenta;

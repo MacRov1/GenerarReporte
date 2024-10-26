@@ -25,17 +25,20 @@ public class VendedorServicios {
 
     public boolean altaVendedor(Vendedor vendedor) {
         try {
-            //consulta SQL para insertar el nuevo vendedor a la bd
-            String sql = "INSERT INTO vendedor (nombre, cedula, correo_electronico, telefono, direccion, fecha_contratacion) VALUES (?, ?, ?, ?, ?, ?)";
+            // Consulta SQL para insertar el nuevo vendedor a la BD
+            String sql = "INSERT INTO vendedor (Nombre_Usuario, Contrasenia, Nombre, Cedula, Correo_Electronico, Telefono, Direccion, Fecha_Contratacion, Activo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             PreparedStatement ps = conexion.prepareStatement(sql);
-            ps.setString(1, vendedor.getNombre());
-            ps.setInt(2, vendedor.getCedula());
-            ps.setString(3, vendedor.getCorreo());
-            ps.setString(4, vendedor.getTelefono());
-            ps.setString(5, vendedor.getDireccion());
-            ps.setTimestamp(6, new java.sql.Timestamp(vendedor.getFechaContratacion().getTime()));
+            ps.setString(1, vendedor.getNomUsuario());
+            ps.setString(2, vendedor.getContrasenia());
+            ps.setString(3, vendedor.getNombre());
+            ps.setInt(4, vendedor.getCedula());
+            ps.setString(5, vendedor.getCorreo());
+            ps.setString(6, vendedor.getTelefono());
+            ps.setString(7, vendedor.getDireccion());
+            ps.setTimestamp(8, new java.sql.Timestamp(vendedor.getFechaContratacion().getTime()));
+            ps.setBoolean(9, vendedor.getActivo());
 
-            //ejecuta la consulta y retorna true si se inserta correctament
+            // Ejecuta la consulta y retorna true si se inserta correctamente
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -45,17 +48,21 @@ public class VendedorServicios {
 
     public boolean modificarVendedor(int id, Vendedor vendedor) {
         try {
-            //consulta SQL para actualizar los datos del vendedor
-            String sql = "UPDATE vendedor SET nombre = ?, cedula = ?, correo_electronico = ?, telefono = ?, direccion = ? WHERE id = ?";
+            // Consulta SQL para actualizar los datos del vendedor
+            String sql = "UPDATE vendedor SET Nombre_Usuario = ?, Contrasenia = ?, Nombre = ?, Cedula = ?, Correo_Electronico = ?, Telefono = ?, Direccion = ?, Fecha_Contratacion = ?, Activo = ? WHERE id = ?";
             PreparedStatement ps = conexion.prepareStatement(sql);
-            ps.setString(1, vendedor.getNombre());
-            ps.setInt(2, vendedor.getCedula());
-            ps.setString(3, vendedor.getCorreo());
-            ps.setString(4, vendedor.getTelefono());
-            ps.setString(5, vendedor.getDireccion());
-            ps.setInt(6, id);
+            ps.setString(1, vendedor.getNomUsuario());
+            ps.setString(2, vendedor.getContrasenia());
+            ps.setString(3, vendedor.getNombre());
+            ps.setInt(4, vendedor.getCedula());
+            ps.setString(5, vendedor.getCorreo());
+            ps.setString(6, vendedor.getTelefono());
+            ps.setString(7, vendedor.getDireccion());
+            ps.setTimestamp(8, new java.sql.Timestamp(vendedor.getFechaContratacion().getTime()));
+            ps.setBoolean(9, vendedor.getActivo());
+            ps.setInt(10, id);
 
-            //ejecuta la consulta y retorna true si se actualiza correctamente
+            // Ejecuta la consulta y retorna true si se actualiza correctamente
             return ps.executeUpdate() > 0;
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -90,6 +97,8 @@ public class VendedorServicios {
             while(rs.next()) {
                 Vendedor vendedor = new Vendedor();
                 vendedor.setId(rs.getInt("id"));
+                vendedor.setNomUsuario(rs.getString("nombre_usuario"));
+                vendedor.setContrasenia(rs.getString("contrasenia"));
                 vendedor.setNombre(rs.getString("nombre"));
                 vendedor.setCedula(rs.getInt("cedula"));
                 vendedor.setCorreo(rs.getString("correo_electronico"));
@@ -123,6 +132,7 @@ public class VendedorServicios {
                 vendedor.setDireccion(rs.getString("direccion"));
                 Timestamp fechaContratacion = rs.getTimestamp("fecha_contratacion");
                 vendedor.setFechaContratacion(new java.util.Date(fechaContratacion.getTime()));
+                vendedor.setActivo(rs.getBoolean("activo"));
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
@@ -245,5 +255,22 @@ public class VendedorServicios {
             e.printStackTrace();
         }
         return esValido;
+    }
+    
+    public int obtenerIdPorUsuario(String nombreUsuario) {
+        String sql = "SELECT id FROM vendedor WHERE Nombre_Usuario = ?";
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, nombreUsuario);
+            try (ResultSet resultSet = ps.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("id");
+                } else {
+                    return -1;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 }

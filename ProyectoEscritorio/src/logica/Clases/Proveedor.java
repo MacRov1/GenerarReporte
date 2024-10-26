@@ -3,7 +3,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package logica.Clases;
-import java.sql.Date;
+
 /**
  *
  * @author macro
@@ -15,7 +15,6 @@ public class Proveedor {
     private String direccion;
     private String correoElectronico;
     private Boolean activo;
-    private Date fechaRegistro; //NUEVOO
     
      public Proveedor() {
     }
@@ -27,7 +26,6 @@ public class Proveedor {
         this.direccion = direccion;
         this.correoElectronico = correoElectronico;
         this.activo = activo;
-        
     }
 
     // Getters y Setters
@@ -77,12 +75,5 @@ public class Proveedor {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
-    }
-     public Date getFechaRegistro() {
-        return fechaRegistro;
-    }
-
-    public void setFechaRegistro(Date fechaRegistro) {
-        this.fechaRegistro = fechaRegistro;
     }
 }

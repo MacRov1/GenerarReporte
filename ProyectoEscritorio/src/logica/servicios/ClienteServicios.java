@@ -63,24 +63,25 @@ public class ClienteServicios {
         
     public boolean existeRut(String rut) {
     String sql = "SELECT COUNT(*) FROM cliente WHERE num_rut = ?";
-    try {
-        PreparedStatement stmt = conexion.prepareStatement(sql);
-        stmt.setString(1, rut); // Cambiado a setString
-        ResultSet rs = stmt.executeQuery();
-        if (rs.next()) {
-            return rs.getInt(1) > 0;
+        try {
+            PreparedStatement stmt = conexion.prepareStatement(sql);
+            stmt.setString(1, rut);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
         }
-    } catch (SQLException ex) {
-        ex.printStackTrace();
-    }
-    return false;
+        return false;
     }
     
     public boolean deshabilitarCliente(String rut) {
-   String sql = "UPDATE cliente SET activo = 0 WHERE num_rut = ?";
+    String sql = "UPDATE cliente SET activo = 0 WHERE num_rut = ?";
+
     try {
         PreparedStatement stmt = conexion.prepareStatement(sql);
-        stmt.setString(1, rut); // Cambiado a setString
+        stmt.setString(1, rut);
 
         int filasAfectadas = stmt.executeUpdate();
         return filasAfectadas > 0;
@@ -214,4 +215,26 @@ public class ClienteServicios {
         }
         return nombres;
     }
+
+    public int obtenerIdPorNombre(String nombreCliente) {
+        String sql = "SELECT ID FROM cliente WHERE nom_empresa = ?";
+
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            // Asegúrate de que el nombreCliente está correctamente limpiado y sin espacios
+            ps.setString(1, nombreCliente.trim()); // Usa trim() para limpiar espacios
+
+            try (ResultSet resultSet = ps.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("ID");
+                } else {
+                    throw new SQLException("No se encontró un cliente con el nombre: " + nombreCliente);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return -1; // Retorna -1 en caso de error
+        }
+    }
+
+
 }

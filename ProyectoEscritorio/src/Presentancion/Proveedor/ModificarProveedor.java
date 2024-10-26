@@ -251,14 +251,6 @@ public class ModificarProveedor extends javax.swing.JFrame {
             return;
         }
         
-        
-        int telefonoInt = Integer.parseInt(telefono);  
-        //verificamos que la cédula sea un numero positivo
-        if (telefonoInt <= 0) {
-            javax.swing.JOptionPane.showMessageDialog(this, "El telefono no puede ser un numero negativo.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        
         //verificamos que el correo tenga un formato válido
         if (!correo.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
             javax.swing.JOptionPane.showMessageDialog(this, "El correo no tiene un formato válido.", "Error", javax.swing.JOptionPane.ERROR_MESSAGE);

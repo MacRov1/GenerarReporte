@@ -13,11 +13,12 @@ public class Producto {
     private float precioVenta;
     private Categoria categoria;
     private Boolean activo;
+    private byte[] imagen;
 
     public Producto(){
     }
 
-    public Producto(int id, String nombre, String descripcion, String SKU, int stock, float precioVenta, Categoria categoria, Boolean activo) {
+     public Producto(int id, String nombre, String descripcion, String SKU, int stock, float precioVenta, Categoria categoria, Boolean activo, byte[] imagen) {
         this.id = id;
         this.nombre = nombre;
         this.descripcion = descripcion;
@@ -26,13 +27,7 @@ public class Producto {
         this.precioVenta = precioVenta;
         this.categoria = categoria;
         this.activo = activo;
-    }
-    public Producto(int id, String nombre, String descripcion, float precio, int stock) {
-        this.id = id;
-        this.nombre = nombre;
-        this.descripcion = descripcion;
-        this.precioVenta = precio;
-        this.stock = stock;
+        this.imagen = imagen;
     }
     
     public int getId() { 
@@ -83,6 +78,14 @@ public class Producto {
 
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+    
+    public byte[] getImagen() {
+        return imagen; 
+    }
+
+    public void setImagen(byte[] imagen) {
+        this.imagen = imagen; 
     }
 }
 

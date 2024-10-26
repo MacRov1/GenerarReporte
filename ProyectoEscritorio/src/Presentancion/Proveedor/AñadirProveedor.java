@@ -221,15 +221,6 @@ public class AñadirProveedor extends javax.swing.JFrame {
             if (!correo.contains("@") || !correo.contains(".com")) {
                 throw new Exception("El correo electrónico debe contener un '@' y '.com'.");
             }
-
-            // Convertir el dato al tipo adecuado
-            int telefono;
-
-            try {
-                telefono = Integer.parseInt(telefonoStr);
-            } catch (NumberFormatException e) {
-                throw new Exception("El teléfono debe ser un número válido.");
-            }
             
             //verificamos que el teléfono tenga entre 9 y 15 dígitos
             if (!telefonoStr.matches("\\d{9,15}")) {
@@ -247,7 +238,7 @@ public class AñadirProveedor extends javax.swing.JFrame {
             // Crear una instancia de Proveedor y establecer sus atributos
             Proveedor proveedor = new Proveedor();
             proveedor.setNombre(nombre);
-            proveedor.setTelefono(String.valueOf(telefono));
+            proveedor.setTelefono(telefonoStr);
             proveedor.setCorreoElectronico(correo);
             proveedor.setDireccion(direccion);
 

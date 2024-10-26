@@ -12,7 +12,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.sql.Date;
 
 public class ProveedorServicios {
 
@@ -231,67 +230,6 @@ public class ProveedorServicios {
         }
 
         return nombreProveedor;
-    }
-    
-    
-    
-    //-------------------------------------------------------------------------------------------------------------------
-    //NUEVOO
-     public List<Proveedor> obtenerTodosLosProveedores() {
-        List<Proveedor> proveedores = new ArrayList<>();
-        String query = "SELECT * FROM proveedor";
-
-        try (PreparedStatement stmt = conexion.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                Proveedor proveedor = new Proveedor();
-                proveedor.setId(rs.getInt("id"));
-                proveedor.setNombre(rs.getString("Nombre"));
-                proveedor.setTelefono(rs.getString("Telefono"));
-                proveedor.setDireccion(rs.getString("Direccion"));
-                proveedor.setCorreoElectronico(rs.getString("Correo_Electronico"));
-                proveedor.setActivo(rs.getBoolean("Activo"));
-                proveedores.add(proveedor);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace(); // Manejo de errores
-        }
-        return proveedores;
-    }
-
-     
-     // Método para obtener proveedores por fecha y categoría
-    public List<Proveedor> obtenerProveedoresPorFechaYCategoria(String fechaInicio, String fechaFin, int categoriaId) {
-        List<Proveedor> proveedores = new ArrayList<>();
-        String query = "SELECT p.* FROM proveedores p " +
-                       "JOIN productos prod ON p.id = prod.proveedor_id " +
-                       "WHERE prod.categoria_id = ? AND p.fecha_registro BETWEEN ? AND ?";
-
-        try (PreparedStatement ps = conexion.prepareStatement(query)) {
-            ps.setInt(1, categoriaId);
-            ps.setDate(2, Date.valueOf(fechaInicio));
-            ps.setDate(3, Date.valueOf(fechaFin));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Proveedor proveedor = new Proveedor();
-                    proveedor.setId(rs.getInt("id"));
-                    proveedor.setNombre(rs.getString("nombre"));
-                    proveedor.setTelefono(rs.getString("telefono"));
-                    proveedor.setDireccion(rs.getString("direccion"));
-                    proveedor.setCorreoElectronico(rs.getString("correo_electronico"));
-                    Date fechaRegistro = rs.getDate("fecha_registro");
-                    proveedor.setFechaRegistro(fechaRegistro);
-                    proveedores.add(proveedor);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace(); // Manejo de errores
-        }
-
-        return proveedores;
     }
 
 }

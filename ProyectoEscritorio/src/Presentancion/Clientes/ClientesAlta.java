@@ -166,63 +166,73 @@ public class ClientesAlta extends javax.swing.JFrame {
     }//GEN-LAST:event_btnCancelar1ActionPerformed
 
     private void btnAgregar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAgregar1ActionPerformed
-     String nombre = txtNombre1.getText().trim();
+    String nombre = txtNombre1.getText().trim();
     String email = txtCorreo.getText().trim();
     String telefono = txtTelefono.getText().trim();
-    String rut = txtRut.getText().trim(); // El RUT ahora es String
     
-    // Verificar si el campo RUT está vacío
-    if (rut.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "El campo 'RUT' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
-        txtRut.requestFocus();
-        return;
-    }
+    String rut;
+        try {
+            rut = txtRut.getText().trim();
+            //verificar si el RUT ya existe
+            ControladorCliente controlador = ControladorCliente.getInstance();
+            if (controlador.existeRut(rut)) {
+                JOptionPane.showMessageDialog(this, "El RUT ya está registrado","Error", JOptionPane.ERROR_MESSAGE);
+                txtRut.requestFocus();
+                return;
+            }
+        } catch (NumberFormatException e) {
+            //manejar el caso en que el RUT no sea un número válido
+            JOptionPane.showMessageDialog(this, "RUT inválido. Debe ser un número.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        //obtenemos la fecha actual en el formato yyyy-MM-dd
+            Date fecha = Calendar.getInstance().getTime();
+            java.sql.Date fechaRegistro = new java.sql.Date(fecha.getTime());
 
-    // Verificar si el RUT ya existe
-    ControladorCliente controlador = ControladorCliente.getInstance();
-    if (controlador.existeRut(rut)) {
-        JOptionPane.showMessageDialog(this, "El RUT ya está registrado", "Error", JOptionPane.ERROR_MESSAGE);
-        txtRut.requestFocus();
-        return;
-    }
+        if (nombre.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Nombre' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
+            txtNombre1.requestFocus();
+            return;
+        }
 
-    // Validar campos requeridos
-    if (nombre.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "El campo 'Nombre' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
-        txtNombre1.requestFocus();
-        return;
-    }
-    if (email.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "El campo 'Correo' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
-        txtCorreo.requestFocus();
-        return;
-    }
-    if (telefono.isEmpty()) {
-        JOptionPane.showMessageDialog(this, "El campo 'Teléfono' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
-        txtTelefono.requestFocus();
-        return;
-    }
+        if (email.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Correo' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
+            txtCorreo.requestFocus();
+            return;
+        }
 
-    // Obtener fecha actual en formato java.sql.Date
-    java.sql.Date fechaRegistro = new java.sql.Date(Calendar.getInstance().getTime().getTime());
+        if (telefono.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El campo 'Teléfono' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
+            txtTelefono.requestFocus();
+            return;
+        }
 
-    // Llamar al método para agregar cliente
-    boolean exito = controlador.agregarCliente(nombre, email, rut, telefono, fechaRegistro);
+        String rutText = txtRut.getText().trim(); //convertimos a String
+        if(rutText.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "El campo 'RUT' está vacío", "Error", JOptionPane.ERROR_MESSAGE);
+            txtRut.requestFocus();
+            return;
+        }
 
-    // Mostrar mensaje según el resultado
-    if (exito) {
-        JOptionPane.showMessageDialog(this, "Cliente agregado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-        // Limpiar campos
-        txtNombre1.setText("");
-        txtCorreo.setText("");
-        txtRut.setText("");
-        txtTelefono.setText("");
-        txtNombre1.requestFocus();
-    } else {
-        JOptionPane.showMessageDialog(this, "Error al agregar cliente. Inténtelo de nuevo.", "Error", JOptionPane.ERROR_MESSAGE);
-    }
-    
-    this.dispose(); // Cerrar ventana
+        //obtenemos la instancia del controlador
+        ControladorCliente controlador = ControladorCliente.getInstance();
+
+        //llamamos al método para agregar cliente
+        boolean exito = controlador.agregarCliente(nombre, email, rut, telefono, fechaRegistro);
+
+        //mostramos mensaje según el resultado
+        if (exito) {
+            JOptionPane.showMessageDialog(this, "Cliente agregado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+            //limpiamos los campos si es necesario
+            txtNombre1.setText("");
+            txtCorreo.setText("");
+            txtRut.setText("");
+            txtTelefono.setText("");
+            txtNombre1.requestFocus();
+        } else {
+            JOptionPane.showMessageDialog(this, "Error al agregar cliente. Inténtelo de nuevo.", "Error", JOptionPane.ERROR_MESSAGE);
+        } 
+        this.dispose();
     }//GEN-LAST:event_btnAgregar1ActionPerformed
 
     /**

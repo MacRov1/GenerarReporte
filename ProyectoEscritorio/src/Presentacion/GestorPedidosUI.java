@@ -9,13 +9,20 @@ import Presentancion.Clientes.ClientesPrincipal;
 import Presentancion.Pedidos.ActualizarPedido;
 import Presentancion.Pedidos.AddPedido;
 import Presentancion.Proveedor.datosProveedor;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.text.SimpleDateFormat;
 
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
 import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import logica.Clases.Pedido;
 import logica.Interfaces.IControladorCliente;
 import logica.Interfaces.IControladorPedido;
@@ -41,6 +48,10 @@ public class GestorPedidosUI extends javax.swing.JFrame {
     private IControladorCliente ICC;
     private ActualizarPedido actualizarPedido = new ActualizarPedido();
     private AddPedido agregarPedido = new AddPedido();
+    //agregamos un contador para controlar los clics para el filtrado por columna (no el combobox)
+    private int clickCount = 0;
+    private TableRowSorter<DefaultTableModel> sorter;
+    private Timer timer;
 
     public GestorPedidosUI() {
         initComponents();
@@ -51,31 +62,61 @@ public class GestorPedidosUI extends javax.swing.JFrame {
         this.setTitle("Gestion de Pedidos");
         this.setLocationRelativeTo(null); // Centra la ventana
         this.cargarDatosDePedidos();
+        this.agregarFiltros();
+        txtBBusqueda.setToolTipText(null);
+        
+        // Deshabilitamos los botones mod y elim
+        btnActualizarPedido.setEnabled(false);
+        btnTerminarPedido.setEnabled(false);
+        
+        timer = new Timer(4000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Solo actualiza si el filtro "Todos" está seleccionado y no hay texto en el JTextField
+                if (cbFiltros.getSelectedIndex() == 0 && txtBBusqueda.getText().trim().isEmpty()) {
+                    recargarDatosDelPedido();
+                }
+            }
+        });
+        timer.start(); // Iniciar el timer
+        agregarFiltros();
+        
+        // Agregar un listener para la tabla que activa los botones al seleccionar una fila
+        tblPedidos.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) { // Solo procesar si la selección ha cambiado
+                int filaSeleccionada = tblPedidos.getSelectedRow();
+                boolean seleccionValida = filaSeleccionada >= 0;
+
+                // Habilitar o deshabilitar botones según la selección
+                btnActualizarPedido.setEnabled(seleccionValida);
+                btnTerminarPedido.setEnabled(seleccionValida);
+            }
+        });
     }
     
     private void cargarDatosDePedidos() {
-        ArrayList<Pedido> pedidosDeBaseDeDatos = new ArrayList<>(this.ICP.getPedidos());
+        ArrayList<Pedido> pedidosDeBaseDeDatos = this.ICP.getPedidos();
         DefaultTableModel modelo = (DefaultTableModel) this.tblPedidos.getModel();
 
-        // Crear un renderizador que centre el contenido
+        //configuramos el TableRowSorter
+        sorter = new TableRowSorter<>(modelo);
+        tblPedidos.setRowSorter(sorter);
+
+        //creamos un renderizador que centre el contenido
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-
-        // Centra la primera columna
         tblPedidos.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
 
-        //formato deseado para la fecha
         SimpleDateFormat fechaFormato = new SimpleDateFormat("dd/MM/yyyy");
-        
+
         for (Pedido pedido : pedidosDeBaseDeDatos) {
             String nombreVendedor = ICV.obtenerNombreVendedorPorId(pedido.getIdVendedor());
             String nombreCliente = ICC.obtenerNombreClientePorId(pedido.getIdCliente());
 
-            //convertimos el estado a su representación deseada
             String estadoFormateado = "";
             switch (pedido.getEstado()) {
                 case EN_PREPARACION:
-                    estadoFormateado = "En Preparacion";
+                    estadoFormateado = "En Preparación";
                     break;
                 case EN_VIAJE:
                     estadoFormateado = "En Viaje";
@@ -90,10 +131,9 @@ public class GestorPedidosUI extends javax.swing.JFrame {
                     estadoFormateado = "Desconocido";
                     break;
             }
-            
+
             String fechaFormateada = "";
             if (pedido.getFechaPedido() != null) {
-                //formateamos la fecha a cadena
                 fechaFormateada = fechaFormato.format(pedido.getFechaPedido());
             }
 
@@ -107,6 +147,66 @@ public class GestorPedidosUI extends javax.swing.JFrame {
             modelo.addRow(nuevaRow);
         }
     }
+    
+    private void agregarFiltros() {
+        txtBBusqueda.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                pausarActualizacion();  // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                pausarActualizacion();  // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                pausarActualizacion();  // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+        });
+
+        cbFiltros.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                pausarActualizacion();  // Pausa el timer al cambiar el filtro
+                aplicarFiltro();
+            }
+        });
+    }
+
+    // Método para pausar el timer
+    private void pausarActualizacion() {
+        timer.stop();  // Detener el timer
+        reanudarActualizacion(); // Verificar si se puede reanudar
+    }
+
+    private void reanudarActualizacion() {
+        // Comprobar las condiciones antes de reiniciar el timer
+        if (cbFiltros.getSelectedIndex() == 0 || txtBBusqueda.getText().trim().isEmpty()) {
+            timer.start();  // Reiniciar el timer solo si las condiciones son adecuadas
+        }
+    }
+
+
+    // Este método debe estar fuera de los Listeners para que sea accesible desde ambos
+    private void aplicarFiltro() {
+        String texto = txtBBusqueda.getText().trim();
+        int filtroSeleccionado = cbFiltros.getSelectedIndex();  // Índice de la opción seleccionada en el ComboBox
+
+        if (filtroSeleccionado == 0) {
+            // Buscar en todas las columnas de manera sensible a mayúsculas y minúsculas
+            sorter.setRowFilter(RowFilter.regexFilter(texto));
+        } else {
+            // Buscar en una columna específica de manera sensible a mayúsculas y minúsculas
+            int columna = filtroSeleccionado - 1;  // Restar 1 porque el índice "Todos" es 0
+            sorter.setRowFilter(RowFilter.regexFilter(texto, columna));
+        }
+    }
+
     
     private void limpiarTablaUsuarios() {
         DefaultTableModel modelo = (DefaultTableModel) this.tblPedidos.getModel();
@@ -130,15 +230,17 @@ public class GestorPedidosUI extends javax.swing.JFrame {
         btnDatosProveedores = new javax.swing.JButton();
         btnDatosClientes = new javax.swing.JButton();
         btnDatosVendedores = new javax.swing.JButton();
-        jLabel2 = new javax.swing.JLabel();
         btnDatosProductos = new javax.swing.JButton();
         btnDatosCategoria = new javax.swing.JButton();
-        btnRecargarPedidos1 = new javax.swing.JButton();
         btnAddPedido = new javax.swing.JButton();
         btnActualizarPedido = new javax.swing.JButton();
         btnTerminarPedido = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblPedidos = new javax.swing.JTable();
+        txtBBusqueda = new javax.swing.JTextField();
+        cbFiltros = new javax.swing.JComboBox<>();
+        jLabel1 = new javax.swing.JLabel();
+        jLabel2 = new javax.swing.JLabel();
         menuBar = new javax.swing.JMenuBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -170,9 +272,6 @@ public class GestorPedidosUI extends javax.swing.JFrame {
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel2.setText("TABLA DE PEDIDOS");
-
         btnDatosProductos.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnDatosProductos.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Presentancion/Iconos/icons8-inventory-32.png"))); // NOI18N
         btnDatosProductos.setText("Productos");
@@ -188,13 +287,6 @@ public class GestorPedidosUI extends javax.swing.JFrame {
         btnDatosCategoria.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnDatosCategoriaActionPerformed(evt);
-            }
-        });
-
-        btnRecargarPedidos1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Presentancion/Iconos/icons8-update-24.png"))); // NOI18N
-        btnRecargarPedidos1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnRecargarPedidos1ActionPerformed(evt);
             }
         });
 
@@ -249,6 +341,23 @@ public class GestorPedidosUI extends javax.swing.JFrame {
             tblPedidos.getColumnModel().getColumn(1).setPreferredWidth(30);
         }
 
+        txtBBusqueda.setToolTipText("");
+        txtBBusqueda.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtBBusquedaActionPerformed(evt);
+            }
+        });
+
+        cbFiltros.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos", "ID", "Fecha", "Estado", "Vendedor", "Cliente" }));
+        cbFiltros.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbFiltrosActionPerformed(evt);
+            }
+        });
+
+        jLabel1.setText("Buscar:");
+
+        jLabel2.setText("Filtrar:");
         setJMenuBar(menuBar);
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -256,21 +365,25 @@ public class GestorPedidosUI extends javax.swing.JFrame {
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addContainerGap(31, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(btnDatosVendedores, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnDatosClientes, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnDatosProveedores, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(btnDatosProductos, javax.swing.GroupLayout.PREFERRED_SIZE, 140, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnDatosCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(398, 398, 398)
-                        .addComponent(jLabel2)
+                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(btnRecargarPedidos1))
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(72, 72, 72))
                     .addGroup(layout.createSequentialGroup()
-                        .addContainerGap(32, Short.MAX_VALUE)
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(btnDatosVendedores, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnDatosClientes, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnDatosProveedores, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnDatosProductos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(btnDatosCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 137, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(18, 18, 18)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(btnAddPedido)
@@ -278,19 +391,21 @@ public class GestorPedidosUI extends javax.swing.JFrame {
                                 .addComponent(btnActualizarPedido)
                                 .addGap(53, 53, 53)
                                 .addComponent(btnTerminarPedido))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 562, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(19, 19, 19))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(12, 12, 12)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 562, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addGap(0, 20, Short.MAX_VALUE))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 39, Short.MAX_VALUE)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(btnRecargarPedidos1)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(layout.createSequentialGroup()
+                .addGap(28, 28, 28)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabel2))
+                .addGap(21, 21, 21)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(btnDatosClientes, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -308,7 +423,7 @@ public class GestorPedidosUI extends javax.swing.JFrame {
                     .addComponent(btnActualizarPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnAddPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnTerminarPedido, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(12, 12, 12))
+                .addContainerGap(33, Short.MAX_VALUE))
         );
 
         pack();
@@ -350,10 +465,6 @@ public class GestorPedidosUI extends javax.swing.JFrame {
         //hace que la ventana sea visible
         ventanaDatosCategoria.setVisible(true);
     }//GEN-LAST:event_btnDatosCategoriaActionPerformed
-
-    private void btnRecargarPedidos1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecargarPedidos1ActionPerformed
-        recargarDatosDelPedido();
-    }//GEN-LAST:event_btnRecargarPedidos1ActionPerformed
 
     private void btnAddPedidoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddPedidoActionPerformed
         this.agregarPedido.setVisible(true);
@@ -418,6 +529,14 @@ public class GestorPedidosUI extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnTerminarPedidoActionPerformed
 
+    private void cbFiltrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbFiltrosActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cbFiltrosActionPerformed
+
+    private void txtBBusquedaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBBusquedaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtBBusquedaActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -465,12 +584,14 @@ public class GestorPedidosUI extends javax.swing.JFrame {
     private javax.swing.JButton btnDatosProductos;
     private javax.swing.JButton btnDatosProveedores;
     private javax.swing.JButton btnDatosVendedores;
-    private javax.swing.JButton btnRecargarPedidos1;
     private javax.swing.JButton btnTerminarPedido;
+    private javax.swing.JComboBox<String> cbFiltros;
+    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JTable tblPedidos;
+    private javax.swing.JTextField txtBBusqueda;
     // End of variables declaration//GEN-END:variables
 
 }

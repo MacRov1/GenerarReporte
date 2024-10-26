@@ -86,5 +86,4 @@ public class Cliente {
     public void setActivo(Boolean activo) {
         this.activo = activo;
     }
-    
 }

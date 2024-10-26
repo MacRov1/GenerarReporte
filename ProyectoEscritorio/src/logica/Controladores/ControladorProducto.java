@@ -109,12 +109,4 @@ public class ControladorProducto implements IControladorProducto {
     public void eliminarProveedoresPorProductoID(int productoID){
         productoServicios.eliminarProveedoresPorProductoID(productoID);
     }
-    
-    
-    
-    //NUEVOO
-     @Override
-    public List<Producto> listarTodos() {
-        return productoServicios.obtenerTodosLosProductos();
-    }
 }

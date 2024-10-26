@@ -28,7 +28,4 @@ public interface IControladorProveedor {
     public abstract boolean nombreProveedorEnUso(String nombre);
     public abstract List<String> obtenerNombresProveedores();
     public abstract int obtenerProveedorIDPorNombre(String nombre);
-    
-    //NUEVOO
-    public abstract List<Proveedor> listarTodos();
 }

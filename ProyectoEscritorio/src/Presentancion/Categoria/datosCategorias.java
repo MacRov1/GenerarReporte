@@ -4,11 +4,20 @@
  */
 package Presentancion.Categoria;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import logica.servicios.CategoriaServicios;
 import logica.Clases.Categoria;
 
@@ -18,9 +27,9 @@ import logica.Clases.Categoria;
  */
 public class datosCategorias extends javax.swing.JFrame {
 
-    /**
-     * Creates new form datosCategorias
-     */
+    private Timer timer;
+    private TableRowSorter<DefaultTableModel> sorter;
+    
     public datosCategorias() {
         initComponents();
         this.setTitle("Datos de Categorias");
@@ -41,13 +50,85 @@ public class datosCategorias extends javax.swing.JFrame {
         btnModCategoria.setEnabled(false);
         btnDeshCategoria.setEnabled(false);
         
-        //agregamos un listener para la tabla que active los botones al seleccionar una fila
+        // Agregar un listener para la tabla que activa los botones al seleccionar una fila
         tblListarCategorias.getSelectionModel().addListSelectionListener(e -> {
-            //si hay una fila seleccionada, habilitar los botones
-            boolean seleccionValida = tblListarCategorias.getSelectedRow() >= 0;
-            btnModCategoria.setEnabled(seleccionValida);
-            btnDeshCategoria.setEnabled(seleccionValida);
+            if (!e.getValueIsAdjusting()) { // Solo procesar si la selección ha cambiado
+                int filaSeleccionada = tblListarCategorias.getSelectedRow();
+                boolean seleccionValida = filaSeleccionada >= 0;
+
+                // Habilitar o deshabilitar botones según la selección
+                btnModCategoria.setEnabled(seleccionValida);
+                btnDeshCategoria.setEnabled(seleccionValida);
+            }
         });
+        
+        // Inicializar el Timer
+        timer = new Timer(4000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Solo actualiza si el filtro "Todos" está seleccionado y no hay texto en el JTextField
+                if (cbFiltros.getSelectedIndex() == 0 && txtBBusqueda.getText().trim().isEmpty()) {
+                    cargarDatos(); // Llama al método para recargar datos
+                }
+            }
+        });
+        timer.start(); // Iniciar el timer
+
+        // Agregar filtros
+        agregarFiltros();
+    }
+    
+    private void agregarFiltros() {
+        txtBBusqueda.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+        });
+
+        cbFiltros.addActionListener(e -> {
+            pausarActualizacion(); // Pausa el timer al cambiar el filtro
+            aplicarFiltro();
+        });
+    }
+
+    private void pausarActualizacion() {
+        timer.stop(); // Detener el timer
+    }
+
+    private void reanudarActualizacion() {
+        // Comprobar las condiciones antes de reiniciar el timer
+        if (cbFiltros.getSelectedIndex() == 0 && txtBBusqueda.getText().trim().isEmpty()) {
+            timer.start(); // Reiniciar el timer solo si las condiciones son adecuadas
+        }
+    }
+    
+    // Este método debe estar fuera de los Listeners para que sea accesible desde ambos
+    private void aplicarFiltro() {
+        String texto = txtBBusqueda.getText().trim();
+        int filtroSeleccionado = cbFiltros.getSelectedIndex();  // Índice de la opción seleccionada en el ComboBox
+
+        if (filtroSeleccionado == 0) {
+            // Buscar en todas las columnas de manera sensible a mayúsculas y minúsculas
+            sorter.setRowFilter(RowFilter.regexFilter(texto));
+        } else {
+            // Buscar en una columna específica de manera sensible a mayúsculas y minúsculas
+            int columna = filtroSeleccionado - 1;  // Restar 1 porque el índice "Todos" es 0
+            sorter.setRowFilter(RowFilter.regexFilter(texto, columna));
+        }
     }
     
     private void manejoCiereVentana() {
@@ -61,6 +142,15 @@ public class datosCategorias extends javax.swing.JFrame {
 
         //obtenemos el modelo de la tabla
         DefaultTableModel modelo = (DefaultTableModel) tblListarCategorias.getModel();
+        
+        //configuramos el TableRowSorter
+        sorter = new TableRowSorter<>(modelo);
+        tblListarCategorias.setRowSorter(sorter);
+
+        //creamos un renderizador que centre el contenido
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        tblListarCategorias.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
         
         //limpiamos la tabla antes de agregar los nuevos datos
         modelo.setRowCount(0);
@@ -85,15 +175,36 @@ public class datosCategorias extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jLabel2 = new javax.swing.JLabel();
+        txtBBusqueda = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        cbFiltros = new javax.swing.JComboBox<>();
         jLabel1 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tblListarCategorias = new javax.swing.JTable();
         btnAltaCategoria = new javax.swing.JButton();
         btnModCategoria = new javax.swing.JButton();
         btnDeshCategoria = new javax.swing.JButton();
-        btnActualizar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jLabel2.setText("Buscar:");
+
+        txtBBusqueda.setToolTipText("");
+        txtBBusqueda.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                txtBBusquedaActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("Filtrar:");
+
+        cbFiltros.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos", "ID", "Nombre", "Descripcion", "Activo" }));
+        cbFiltros.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbFiltrosActionPerformed(evt);
+            }
+        });
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
         jLabel1.setText("TABLA DE CATEGORIAS");
@@ -148,13 +259,6 @@ public class datosCategorias extends javax.swing.JFrame {
             }
         });
 
-        btnActualizar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Presentancion/Iconos/icons8-update-24.png"))); // NOI18N
-        btnActualizar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnActualizarActionPerformed(evt);
-            }
-        });
-
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -162,37 +266,51 @@ public class datosCategorias extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 631, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jScrollPane1)
+                        .addContainerGap())
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                         .addGap(0, 0, Short.MAX_VALUE)
-                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(145, 145, 145)
-                        .addComponent(btnActualizar)))
-                .addContainerGap())
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(26, 26, 26)
+                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(76, 76, 76))))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(186, 186, 186))
             .addGroup(layout.createSequentialGroup()
-                .addGap(33, 33, 33)
+                .addGap(20, 20, 20)
                 .addComponent(btnAltaCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 187, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnModCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 188, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(btnDeshCategoria)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(47, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(17, 17, 17)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jLabel1)
-                    .addComponent(btnActualizar))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 246, Short.MAX_VALUE)
+                .addGap(16, 16, 16)
+                .addComponent(jLabel1)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3))
+                .addGap(14, 14, 14)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 284, Short.MAX_VALUE)
                 .addGap(40, 40, 40)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAltaCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnModCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnDeshCategoria, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(38, 38, 38))
+                .addGap(15, 15, 15))
         );
 
         pack();
@@ -285,9 +403,13 @@ public class datosCategorias extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnDeshCategoriaActionPerformed
 
-    private void btnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarActionPerformed
-        cargarDatos();
-    }//GEN-LAST:event_btnActualizarActionPerformed
+    private void txtBBusquedaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBBusquedaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtBBusquedaActionPerformed
+
+    private void cbFiltrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbFiltrosActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cbFiltrosActionPerformed
 
     /**
      * @param args the command line arguments
@@ -325,12 +447,15 @@ public class datosCategorias extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnActualizar;
     private javax.swing.JButton btnAltaCategoria;
     private javax.swing.JButton btnDeshCategoria;
     private javax.swing.JButton btnModCategoria;
+    private javax.swing.JComboBox<String> cbFiltros;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblListarCategorias;
+    private javax.swing.JTextField txtBBusqueda;
     // End of variables declaration//GEN-END:variables
 }

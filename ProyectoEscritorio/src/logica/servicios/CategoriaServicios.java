@@ -180,28 +180,21 @@ public class CategoriaServicios {
             return cantidadProductos > 0;
     }
     
-    
-    //-------------------------------------------------------------------------------------------------
-    //NUEVOOO
-     // Método para obtener todas las categorías
-    public List<Categoria> obtenerTodasLasCategorias() {
-        List<Categoria> categorias = new ArrayList<>();
-        String query = "SELECT * FROM categorias";
+    public int obtenerIdPorNombre(String nombreCategoria) {
+        String sql = "SELECT id FROM categoria WHERE nombre = ?";
+        try (PreparedStatement ps = conexion.prepareStatement(sql)) {
+            ps.setString(1, nombreCategoria);
+            ResultSet resultSet = ps.executeQuery();
 
-        try (PreparedStatement stmt = conexion.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                Categoria categoria = new Categoria();
-                categoria.setId(rs.getInt("id"));
-                categoria.setNombre(rs.getString("nombre"));
-                categorias.add(categoria);  // Añadimos la categoría a la lista
+            if (resultSet.next()) {
+                return resultSet.getInt("id");
+            } else {
+                throw new SQLException("No se encontró una categoría con el nombre: " + nombreCategoria);
             }
-
         } catch (SQLException e) {
-            e.printStackTrace();  // Manejo de errores
+            e.printStackTrace();
+            return -1; // Retorna -1 en caso de error
         }
-
-        return categorias;
     }
+
 }

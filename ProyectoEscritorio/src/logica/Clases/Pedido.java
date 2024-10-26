@@ -6,8 +6,6 @@ package logica.Clases;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import logica.servicios.PedidosServicios;
 
 public class Pedido {
     
@@ -22,9 +20,6 @@ public class Pedido {
     private int idVendedor;
     private int idCliente;
     private ArrayList<DetallePedido> detallesPedidos;
-    private List<Producto> productos; //NUEVOO
-    
-    private PedidosServicios servicioPedidos;
     
     public Pedido(){
         
@@ -39,14 +34,10 @@ public class Pedido {
         this.idCliente = idCliente;
         this.detallesPedidos = new ArrayList<>();
     }
-
+    
     public int getIdentificador() {
         return identificador;
     }
-    
-  /*  public List<Producto> getProductos() {
-        return productos;
-    }*/
 
     public void setIdentificador(int identificador) {
         this.identificador = identificador;
@@ -115,9 +106,5 @@ public class Pedido {
     public ArrayList<DetallePedido> getDetallesPedidos() {
         return detallesPedidos;
     }
-    
-       public List<Producto> getProductos() {
-    return servicioPedidos.obtenerProductosPorPedido(this.identificador);
-}
 }
 

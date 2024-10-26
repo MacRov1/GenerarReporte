@@ -29,7 +29,4 @@ public interface IControladorProducto {
     public abstract boolean productoEnPedidos(int idProducto);
     public abstract List<Integer> obtenerProveedoresPorProductoID(int productoID);
     public abstract void eliminarProveedoresPorProductoID(int productoID);
-    
-    //NUEVOO
-    public abstract List<Producto> listarTodos();
 }

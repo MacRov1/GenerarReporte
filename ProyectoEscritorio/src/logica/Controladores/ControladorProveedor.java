@@ -18,7 +18,7 @@ public class ControladorProveedor implements IControladorProveedor {
     // Atributos
     private static ControladorProveedor instancia; 
     private ProveedorServicios proveedorServicios; 
-    
+
     private ControladorProveedor() {
         proveedorServicios = new ProveedorServicios();
     }
@@ -78,11 +78,4 @@ public class ControladorProveedor implements IControladorProveedor {
    public int obtenerProveedorIDPorNombre(String nombre){
        return proveedorServicios.obtenerProveedorIDPorNombre(nombre);
    }
-   
-   
-   //NUEVOO
-   @Override
-   public List<Proveedor> listarTodos() {
-        return proveedorServicios.obtenerTodosLosProveedores();
-    }
 }

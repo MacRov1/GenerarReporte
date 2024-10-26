@@ -4,21 +4,30 @@
  */
 package logica.Controladores;
 
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import logica.Clases.Pedido;
+import logica.Clases.Pedido.Estado;
 import logica.Interfaces.IControladorPedido;
 import logica.servicios.PedidosServicios;
 
+/**
+ *
+ * @author Mateo
+ */
 public class ControladorPedido implements IControladorPedido {
 
+    private Map<String, Pedido> Pedidos;
     private PedidosServicios servicioPedidos;
     private static ControladorPedido instancia;
 
-    private ControladorPedido() {
+    public ControladorPedido() {
         this.servicioPedidos = new PedidosServicios();
     }
 
-    // Método Singleton
+    //Metodo Singleton
     public static ControladorPedido getInstance() {
         if (instancia == null) {
             instancia = new ControladorPedido();
@@ -27,10 +36,12 @@ public class ControladorPedido implements IControladorPedido {
     }
 
     @Override
-    public List<Pedido> getPedidos() {
-        return servicioPedidos.getPedidos();
+    //Devuelve todos los pedidos
+    public ArrayList<Pedido> getPedidos() {
+        ArrayList<Pedido> pedidos = servicioPedidos.getPedidos();
+        return pedidos;
     }
-
+    
     @Override
     public boolean eliminarPedido(int idPedido) {
         return servicioPedidos.eliminarPedido(idPedido);
@@ -40,20 +51,31 @@ public class ControladorPedido implements IControladorPedido {
     public boolean actualizarPedido(Pedido pedido) {
         return servicioPedidos.actualizarPedido(pedido);
     }
-
+    
+    // Método para agregar un pedido
     @Override
     public boolean agregarPedido(Pedido pedido) {
-        return servicioPedidos.agregarPedido(pedido);
+        boolean exito = servicioPedidos.agregarPedido(pedido);
+        return exito;
     }
-
+    
     @Override
-    public boolean actualizarEstadoPedido(int idPedido, String nuevoEstado) {
+    public boolean actualizarEstadoPedido(int idPedido, String nuevoEstado){
         return servicioPedidos.actualizarEstadoPedido(idPedido, nuevoEstado);
     }
 
     @Override
-    public List<Pedido> obtenerPedidosFiltrados(String fecha, String categoriaId, String clienteId) {
-        return servicioPedidos.obtenerPedidosFiltrados(fecha, categoriaId, clienteId);
+    public ArrayList<Pedido> getPedidosPorVendedor(int idVendedor){
+        return servicioPedidos.getPedidosPorVendedor(idVendedor);
+    }
+    
+    @Override
+    public ArrayList<Pedido> getPedidosPorVendedorYFecha(int idVendedor, int mes, int año){
+        return servicioPedidos.getPedidosPorVendedorYFecha(idVendedor, mes, año);
+    }
+    
+    @Override
+    public ArrayList<Pedido> getPedidosPorVendedorClienteYFecha(int idVendedor, int clienteId, int mes, int año){
+        return servicioPedidos.getPedidosPorVendedorClienteYFecha(idVendedor, clienteId, mes, año);
     }
 }
-

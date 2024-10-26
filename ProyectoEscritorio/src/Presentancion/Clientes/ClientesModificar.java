@@ -17,7 +17,7 @@ import logica.servicios.ClienteServicios;
  * @author Jairo
  */
 public class ClientesModificar extends javax.swing.JFrame {
-public static int rutCliente;
+public static String rutCliente;
     /**
      * Creates new form ClientesModificar
      */
@@ -44,25 +44,22 @@ public static int rutCliente;
     
     
     private void cargarDatosCliente() {
-         // Obtener el controlador de clientes
-    ControladorCliente controlador = ControladorCliente.getInstance();
+        // Obtener el controlador de clientes
+        ControladorCliente controlador = ControladorCliente.getInstance();
 
-    // Asegúrate de que `rutCliente` sea de tipo String antes de usarlo
-    String rutCliente = txtRut.getText().trim();  // Obtén el RUT desde el campo de texto o la fuente adecuada
+        // Usar el método obtenerClientePorRut para obtener los datos del cliente
+        Cliente cliente = controlador.obtenerClientePorRut(rutCliente);
 
-    // Usar el método obtenerClientePorRut para obtener los datos del cliente
-    Cliente cliente = controlador.obtenerClientePorRut(rutCliente);
-
-    if (cliente != null) {
-        // Cargar los datos en los campos de texto
-        txtRut.setText(cliente.getNum_rut());
-        txtNombre1.setText(cliente.getNom_empresa());
-        txtTelefono.setText(cliente.getTelefono());
-        txtCorreo.setText(cliente.getCorreo_electronico());
-    } else {
-        // Si no se encuentra el cliente, mostrar un mensaje de error
-        JOptionPane.showMessageDialog(this, "Cliente no encontrado", "Error", JOptionPane.ERROR_MESSAGE);
-    }
+        if (cliente != null) {
+            // Cargar los datos en los campos de texto
+            txtRut.setText(String.valueOf(cliente.getNum_rut()));
+            txtNombre1.setText(cliente.getNom_empresa());
+            txtTelefono.setText(cliente.getTelefono());
+            txtCorreo.setText(cliente.getCorreo_electronico());
+        } else {
+            // Si no se encuentra el cliente, mostrar un mensaje de error
+            JOptionPane.showMessageDialog(this, "Cliente no encontrado", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**

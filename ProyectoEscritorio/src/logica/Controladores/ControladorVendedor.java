@@ -91,4 +91,9 @@ public class ControladorVendedor implements IControladorVendedor  {
     public boolean validarCredenciales(String nombreUsuario, String contrasenia){
         return vendedorServicios.validarCredenciales(nombreUsuario, contrasenia);
     }
+    
+    @Override
+    public int obtenerIdPorUsuario(String nombreUsuario){
+        return vendedorServicios.obtenerIdPorUsuario(nombreUsuario);
+    }
 }

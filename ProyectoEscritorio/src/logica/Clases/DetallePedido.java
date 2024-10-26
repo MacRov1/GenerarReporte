@@ -4,6 +4,9 @@
  */
 package logica.Clases;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  *
  * @author UnwantedOpinion
@@ -13,6 +16,7 @@ public class DetallePedido {
     private float precioVenta;
     private Producto producto;
     private int pedidoID;
+    private List<Proveedor> proveedores;
     
     public DetallePedido(int cantidad, float precioVenta, Producto producto, int pedidoID) {
         this.cantidad = cantidad;
@@ -20,6 +24,15 @@ public class DetallePedido {
         this.producto = producto;
         this.pedidoID = pedidoID;
     }
+    
+    public DetallePedido(int cantidad, float precioVenta, Producto producto, int pedidoID, List<Proveedor> proveedores) {
+        this.cantidad = cantidad;
+        this.precioVenta = precioVenta;
+        this.producto = producto;
+        this.pedidoID = pedidoID;
+        this.proveedores = proveedores != null ? proveedores : new ArrayList<>(); // Usar la lista proporcionada o inicializar una nueva
+    }
+
 
     public int getCantidad() {
         return cantidad;
@@ -55,5 +68,13 @@ public class DetallePedido {
 
     public float subTotal() {
         return cantidad * precioVenta;
+    }
+    
+    public void setProveedores(List<Proveedor> proveedores) {
+        this.proveedores = proveedores;
+    }
+
+    public List<Proveedor> getProveedores() {
+        return proveedores;
     }
 }

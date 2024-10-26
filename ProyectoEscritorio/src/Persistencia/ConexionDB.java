@@ -64,7 +64,7 @@ public class ConexionDB {
            
         if (conexion == null) {
             try {
-                Driver driver = new com.mysql.jdbc.Driver();
+                Driver driver = new com.mysql.cj.jdbc.Driver();
                 DriverManager.registerDriver(driver);
                 conexion = DriverManager.getConnection("jdbc:mysql://"+host+":"+port+"/"+db, user, pass);
             } catch (SQLException ex) {

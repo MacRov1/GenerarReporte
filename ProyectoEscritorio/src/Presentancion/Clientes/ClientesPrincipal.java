@@ -4,13 +4,21 @@
  */
 package Presentancion.Clientes;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableRowSorter;
 import logica.Clases.Cliente;
-import logica.Controladores.ControladorCliente;
 import logica.servicios.ClienteServicios;
 
 /**
@@ -19,9 +27,9 @@ import logica.servicios.ClienteServicios;
  */
 public class ClientesPrincipal extends javax.swing.JFrame {
 
-    /**
-     * Creates new form ClientesPrincipal
-     */
+    private Timer timer;
+    private TableRowSorter<DefaultTableModel> sorter;
+    
     public ClientesPrincipal() {
         initComponents();
         actualizarTablaClientes();
@@ -36,12 +44,95 @@ public class ClientesPrincipal extends javax.swing.JFrame {
                     manejoCiereVentana();
                 }
             });
+            
+            btnDeshabcliente.setEnabled(false);
+            btnModificarCliente.setEnabled(false);
+            
+            // Agregar un listener para la tabla que activa los botones al seleccionar una fila
+            tablaClientes2.getSelectionModel().addListSelectionListener(e -> {
+                if (!e.getValueIsAdjusting()) { // Solo procesar si la selección ha cambiado
+                    int filaSeleccionada = tablaClientes2.getSelectedRow();
+                    boolean seleccionValida = filaSeleccionada >= 0;
+
+                    // Habilitar o deshabilitar botones según la selección
+                    btnModificarCliente.setEnabled(seleccionValida);
+                    btnDeshabcliente.setEnabled(seleccionValida);
+                }
+            });
+            
+            // Inicializar el Timer
+            timer = new Timer(4000, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Solo actualiza si el filtro "Todos" está seleccionado y no hay texto en el JTextField
+                    if (cbFiltros.getSelectedIndex() == 0 && txtBBusqueda.getText().trim().isEmpty()) {
+                        actualizarTablaClientes(); // Llama al método para recargar datos
+                    }
+                }
+            });
+            timer.start(); // Iniciar el timer
+
+            // Agregar filtros
+            agregarFiltros();
         }
 
-        private void manejoCiereVentana() {
+    private void agregarFiltros() {
+        txtBBusqueda.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+        });
+
+        cbFiltros.addActionListener(e -> {
+            pausarActualizacion(); // Pausa el timer al cambiar el filtro
+            aplicarFiltro();
+        });
+    }
+
+    private void pausarActualizacion() {
+        timer.stop(); // Detener el timer
+    }
+
+    private void reanudarActualizacion() {
+        // Comprobar las condiciones antes de reiniciar el timer
+        if (cbFiltros.getSelectedIndex() == 0 && txtBBusqueda.getText().trim().isEmpty()) {
+            timer.start(); // Reiniciar el timer solo si las condiciones son adecuadas
+        }
+    }
+    
+    // Este método debe estar fuera de los Listeners para que sea accesible desde ambos
+    private void aplicarFiltro() {
+        String texto = txtBBusqueda.getText().trim();
+        int filtroSeleccionado = cbFiltros.getSelectedIndex();  // Índice de la opción seleccionada en el ComboBox
+
+        if (filtroSeleccionado == 0) {
+            // Buscar en todas las columnas de manera sensible a mayúsculas y minúsculas
+            sorter.setRowFilter(RowFilter.regexFilter(texto));
+        } else {
+            // Buscar en una columna específica de manera sensible a mayúsculas y minúsculas
+            int columna = filtroSeleccionado - 1;  // Restar 1 porque el índice "Todos" es 0
+            sorter.setRowFilter(RowFilter.regexFilter(texto, columna));
+        }
+    }
+    
+    private void manejoCiereVentana() {
            //cierra la ventana actual (aniadirVendedor)
            this.dispose();
-        }
+    }
 
     private void actualizarTablaClientes() {
         ClienteServicios clienteServicios = new ClienteServicios();
@@ -49,6 +140,15 @@ public class ClientesPrincipal extends javax.swing.JFrame {
 
         //obtenemos el modelo de la tabla
         DefaultTableModel modelo = (DefaultTableModel) tablaClientes2.getModel();
+        
+        //configuramos el TableRowSorter
+        sorter = new TableRowSorter<>(modelo);
+        tablaClientes2.setRowSorter(sorter);
+
+        //creamos un renderizador que centre el contenido
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        tablaClientes2.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
         
         //limpiamos la tabla antes de agregar los nuevos datos
         modelo.setRowCount(0);
@@ -78,10 +178,13 @@ public class ClientesPrincipal extends javax.swing.JFrame {
         btnModificarCliente = new javax.swing.JButton();
         btnDeshabcliente = new javax.swing.JButton();
         btnAltaCliente2 = new javax.swing.JButton();
-        jLabel2 = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         tablaClientes2 = new javax.swing.JTable();
-        btnRecargar = new javax.swing.JButton();
+        jLabel3 = new javax.swing.JLabel();
+        txtBBusqueda = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        cbFiltros = new javax.swing.JComboBox<>();
+        jLabel2 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -113,9 +216,6 @@ public class ClientesPrincipal extends javax.swing.JFrame {
             }
         });
 
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
-        jLabel2.setText("LISTADO DE CLIENTES");
-
         tablaClientes2.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -141,11 +241,6 @@ public class ClientesPrincipal extends javax.swing.JFrame {
             public void ancestorRemoved(javax.swing.event.AncestorEvent evt) {
             }
         });
-        tablaClientes2.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                tablaClientes2MouseClicked(evt);
-            }
-        });
         tablaClientes2.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
             public void propertyChange(java.beans.PropertyChangeEvent evt) {
                 tablaClientes2PropertyChange(evt);
@@ -157,11 +252,21 @@ public class ClientesPrincipal extends javax.swing.JFrame {
             tablaClientes2.getColumnModel().getColumn(4).setMaxWidth(50);
         }
 
-        btnRecargar.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
-        btnRecargar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Presentancion/Iconos/icons8-update-24.png"))); // NOI18N
-        btnRecargar.addActionListener(new java.awt.event.ActionListener() {
+        jLabel3.setText("Buscar:");
+
+        txtBBusqueda.setToolTipText("");
+        txtBBusqueda.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnRecargarActionPerformed(evt);
+                txtBBusquedaActionPerformed(evt);
+            }
+        });
+
+        jLabel4.setText("Filtrar:");
+
+        cbFiltros.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos", "RUT", "Nombre", "Telefono", "Correo", "Activo" }));
+        cbFiltros.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbFiltrosActionPerformed(evt);
             }
         });
 
@@ -180,36 +285,49 @@ public class ClientesPrincipal extends javax.swing.JFrame {
                         .addComponent(btnDeshabcliente, javax.swing.GroupLayout.PREFERRED_SIZE, 178, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGap(30, 30, 30)
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel2)
-                                .addGap(136, 136, 136)
-                                .addComponent(btnRecargar))
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 541, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 541, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap(32, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
+                .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(26, 26, 26)
+                .addComponent(jLabel4, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(61, 61, 61))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnRecargar)
-                    .addComponent(jLabel2))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap(22, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabel4))
+                .addGap(18, 18, 18)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 329, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnModificarCliente, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnAltaCliente2, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnDeshabcliente, javax.swing.GroupLayout.PREFERRED_SIZE, 48, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(25, Short.MAX_VALUE))
+                .addContainerGap())
         );
+
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
+        jLabel2.setText("LISTADO DE CLIENTES");
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 645, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(231, Short.MAX_VALUE)
+                .addComponent(jLabel2)
+                .addGap(224, 224, 224))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                     .addContainerGap(20, Short.MAX_VALUE)
@@ -218,37 +336,23 @@ public class ClientesPrincipal extends javax.swing.JFrame {
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 479, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel2)
+                .addContainerGap(490, Short.MAX_VALUE))
             .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addContainerGap(27, Short.MAX_VALUE)
                     .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 467, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addContainerGap(27, Short.MAX_VALUE)))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void btnRecargarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRecargarActionPerformed
-        // TODO add your handling code here:
-        actualizarTablaClientes();
-    }//GEN-LAST:event_btnRecargarActionPerformed
-
     private void tablaClientes2PropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_tablaClientes2PropertyChange
 
     }//GEN-LAST:event_tablaClientes2PropertyChange
-
-    private void tablaClientes2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tablaClientes2MouseClicked
-        // TODO add your handling code here:
-        // Habilitar el botón de eliminar si se selecciona una fila
-        if (tablaClientes2.getSelectedRow() != -1) {
-            btnDeshabcliente.setEnabled(true);
-            btnModificarCliente.setEnabled(true);
-        } else {
-            btnDeshabcliente.setEnabled(false);
-            btnModificarCliente.setEnabled(false);
-        }
-    }//GEN-LAST:event_tablaClientes2MouseClicked
 
     private void tablaClientes2AncestorAdded(javax.swing.event.AncestorEvent evt) {//GEN-FIRST:event_tablaClientes2AncestorAdded
         // TODO add your handling code here:
@@ -263,39 +367,39 @@ public class ClientesPrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_btnAltaCliente2ActionPerformed
 
     private void btnDeshabclienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeshabclienteActionPerformed
-         int selectedRow = tablaClientes2.getSelectedRow();
+        int selectedRow = tablaClientes2.getSelectedRow();
 
-    if (selectedRow != -1) {
-        // Obtener el RUT del cliente seleccionado como String
-        String rutCliente = tablaClientes2.getValueAt(selectedRow, 0).toString();
+        if (selectedRow != -1) {
+            //obtenemos el RUT del cliente seleccionado
+            String rutCliente = (String) tablaClientes2.getValueAt(selectedRow, 0);
 
-        // Mostrar un cuadro de confirmación
-        int confirmacion = JOptionPane.showConfirmDialog(this, 
-                "¿Estás seguro de que deseas deshabilitar el cliente?", 
-                "Confirmar deshabilitación", 
-                JOptionPane.YES_NO_OPTION);
+            //mostramos un cuadro de confirmación
+            int confirmacion = JOptionPane.showConfirmDialog(this, 
+                    "¿Estás seguro de que deseas deshabilitar el cliente?", 
+                    "Confirmar deshabilitación", 
+                    JOptionPane.YES_NO_OPTION);
 
-        if (confirmacion == JOptionPane.YES_OPTION) {
-            // Llamar al método para deshabilitar al cliente
-            ClienteServicios servicio = new ClienteServicios();
-            if (servicio.deshabilitarCliente(rutCliente)) {
-                JOptionPane.showMessageDialog(this, 
-                        "Cliente deshabilitado exitosamente.", 
-                        "Éxito", 
-                        JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                JOptionPane.showMessageDialog(this, 
-                        "No se pudo deshabilitar el cliente.", 
-                        "Error", 
-                        JOptionPane.ERROR_MESSAGE);
+            if (confirmacion == JOptionPane.YES_OPTION) {
+                //llamamos al método para deshabilitar al cliente
+                ClienteServicios servicio = new ClienteServicios();
+                if (servicio.deshabilitarCliente(rutCliente)) {
+                    JOptionPane.showMessageDialog(this, 
+                            "Cliente deshabilitado exitosamente.", 
+                            "Éxito", 
+                            JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, 
+                            "No se pudo deshabilitar el cliente.", 
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                }
             }
+        } else {
+            JOptionPane.showMessageDialog(this, 
+                    "Debe seleccionar un cliente para deshabilitar.", 
+                    "Error", 
+                    JOptionPane.ERROR_MESSAGE);
         }
-    } else {
-        JOptionPane.showMessageDialog(this, 
-                "Debe seleccionar un cliente para deshabilitar.", 
-                "Error", 
-                JOptionPane.ERROR_MESSAGE);
-    }
     }//GEN-LAST:event_btnDeshabclienteActionPerformed
 
     private void btnModificarClienteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnModificarClienteActionPerformed
@@ -307,7 +411,7 @@ public class ClientesPrincipal extends javax.swing.JFrame {
         }
 
         // Obtener el RUT de la columna correspondiente ( columna 0)
-        int rut = (int) tablaClientes2.getValueAt(filaSeleccionada, 0);
+        String rut = (String) tablaClientes2.getValueAt(filaSeleccionada, 0);
         // Asignar el RUT a la variable estática
         ClientesModificar.rutCliente = rut;
 
@@ -320,6 +424,14 @@ public class ClientesPrincipal extends javax.swing.JFrame {
             System.out.println("Error al abrir el formulario: " + e.getMessage());
         }
     }//GEN-LAST:event_btnModificarClienteActionPerformed
+
+    private void txtBBusquedaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBBusquedaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtBBusquedaActionPerformed
+
+    private void cbFiltrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbFiltrosActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cbFiltrosActionPerformed
 
     /**
      * @param args the command line arguments
@@ -360,10 +472,13 @@ public class ClientesPrincipal extends javax.swing.JFrame {
     private javax.swing.JButton btnAltaCliente2;
     private javax.swing.JButton btnDeshabcliente;
     private javax.swing.JButton btnModificarCliente;
-    private javax.swing.JButton btnRecargar;
+    private javax.swing.JComboBox<String> cbFiltros;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tablaClientes2;
+    private javax.swing.JTextField txtBBusqueda;
     // End of variables declaration//GEN-END:variables
 }

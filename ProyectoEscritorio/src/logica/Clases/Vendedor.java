@@ -35,7 +35,18 @@ public class Vendedor {
         this.fechaContratacion = fechaContratacion;
     }
     
-    public Vendedor(int id, String nomUsuario, String contrasenia, String nombre, int cedula, String telefono, String correo, String direccion, Date fechaContratacion, Boolean activo) {
+    public Vendedor(int id, String nombre, int cedula, String telefono, String correo, String direccion, Date fechaContratacion, Boolean activo) {
+        this.id = id;
+        this.nombre = nombre;
+        this.cedula = cedula;
+        this.telefono = telefono;
+        this.correo = correo;
+        this.direccion = direccion;
+        this.fechaContratacion = fechaContratacion;
+        this.activo = activo;
+    }
+
+    public Vendedor(int id, String nomUsuario, String contrasenia, String nombre, int cedula, String correo, String telefono, String direccion, Date fechaContratacion, Boolean activo) {
         this.id = id;
         this.nomUsuario = nomUsuario;
         this.contrasenia = contrasenia;
@@ -47,6 +58,7 @@ public class Vendedor {
         this.fechaContratacion = fechaContratacion;
         this.activo = activo;
     }
+    
 
     public int getId() {
         return id;

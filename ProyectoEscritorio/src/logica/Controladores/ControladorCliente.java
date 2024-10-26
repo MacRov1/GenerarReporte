@@ -31,8 +31,7 @@ public class ControladorCliente implements IControladorCliente {
         }
         return instancia;
     }
-    
-    @Override
+
     public ArrayList<Cliente> listarClientes() {
         ArrayList<Cliente> clientes = ClienteServicios.getClientes();
         return clientes;
@@ -56,7 +55,6 @@ public class ControladorCliente implements IControladorCliente {
         return ClienteServicios.deshabilitarCliente(rut);
     }
     
-    @Override
     public DefaultTableModel cargarDatosEnTabla() {
     DefaultTableModel modeloTabla = new DefaultTableModel();
     modeloTabla.addColumn("RUT");
@@ -78,15 +76,13 @@ public class ControladorCliente implements IControladorCliente {
         modeloTabla.addRow(fila);
     }
     return modeloTabla;
-    }
+}
     
-    @Override
     // Método para obtener un cliente por su RUT
     public Cliente obtenerClientePorRut(String rut) {
         return ClienteServicios.getClientePorRut(rut);
     }
     
-    @Override
     public boolean actualizarCliente(Cliente cliente) {
         return ClienteServicios.actualizarCliente(cliente);
     }

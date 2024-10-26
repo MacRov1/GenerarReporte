@@ -289,6 +289,18 @@ public class ActualizarPedido extends javax.swing.JFrame {
         model.setValueAt(subtotal, row, 3);
     }
     
+    //método para convertir el estado seleccionado en el combo box a un valor del enum
+    private Pedido.Estado convertirEstado(String estadoSeleccionado) {
+        switch (estadoSeleccionado) {
+            case "En Preparacion":
+                return Pedido.Estado.EN_PREPARACION;
+            case "En Viaje":
+                return Pedido.Estado.EN_VIAJE;
+            default:
+                throw new IllegalArgumentException("Estado no válido");
+        }
+    }
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -579,7 +591,14 @@ public class ActualizarPedido extends javax.swing.JFrame {
         int idCliente = clienteServicios.obtenerIdClientePorNombre(nombreCliente);
         
         //tambien obtenemos el estado
-        Pedido.Estado estado = Pedido.Estado.valueOf((String) CbEstado.getSelectedItem());
+        String estadoSeleccionado = (String) CbEstado.getSelectedItem();
+        Pedido.Estado estado;
+        try {
+            estado = convertirEstado(estadoSeleccionado);
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, "Estado no válido: " + estadoSeleccionado, "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         //actualizamos el objeto pedido
         pedidoSeleccionado.setIdVendedor(idVendedor);

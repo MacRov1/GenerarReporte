@@ -4,6 +4,8 @@
  */
 package Presentancion.Vendedores;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import logica.servicios.VendedorServicios;
 import logica.Clases.Vendedor;
 
@@ -13,6 +15,13 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.SimpleDateFormat;
 import javax.swing.JOptionPane;
+import javax.swing.RowFilter;
+import javax.swing.SwingConstants;
+import javax.swing.Timer;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.TableRowSorter;
 
 /**
  *
@@ -20,9 +29,9 @@ import javax.swing.JOptionPane;
  */
 public class datosVendedores extends javax.swing.JFrame {
 
-    /**
-     * Creates new form datosVendedores
-     */
+    private Timer timer;
+    private TableRowSorter<DefaultTableModel> sorter;
+    
      public datosVendedores() {
         initComponents();
         this.setLocationRelativeTo(null);
@@ -50,6 +59,74 @@ public class datosVendedores extends javax.swing.JFrame {
             btnModVendedor.setEnabled(seleccionValida);
             btnDeshVendedor.setEnabled(seleccionValida);
         });
+        
+        // Inicializar el Timer
+        timer = new Timer(4000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Solo actualiza si el filtro "Todos" está seleccionado y no hay texto en el JTextField
+                if (cbFiltros.getSelectedIndex() == 0 && txtBBusqueda.getText().trim().isEmpty()) {
+                    cargarDatos(); // Llama al método para recargar datos
+                }
+            }
+        });
+        timer.start(); // Iniciar el timer
+
+        // Agregar filtros
+        agregarFiltros();
+    }
+    
+     private void agregarFiltros() {
+        txtBBusqueda.getDocument().addDocumentListener(new DocumentListener() {
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+                pausarActualizacion(); // Pausa el timer al buscar
+                aplicarFiltro();
+            }
+        });
+
+        cbFiltros.addActionListener(e -> {
+            pausarActualizacion(); // Pausa el timer al cambiar el filtro
+            aplicarFiltro();
+        });
+    }
+
+    private void pausarActualizacion() {
+        timer.stop(); // Detener el timer
+    }
+
+    private void reanudarActualizacion() {
+        // Comprobar las condiciones antes de reiniciar el timer
+        if (cbFiltros.getSelectedIndex() == 0 && txtBBusqueda.getText().trim().isEmpty()) {
+            timer.start(); // Reiniciar el timer solo si las condiciones son adecuadas
+        }
+    }
+    
+    // Este método debe estar fuera de los Listeners para que sea accesible desde ambos
+    private void aplicarFiltro() {
+        String texto = txtBBusqueda.getText().trim();
+        int filtroSeleccionado = cbFiltros.getSelectedIndex();  // Índice de la opción seleccionada en el ComboBox
+
+        if (filtroSeleccionado == 0) {
+            // Buscar en todas las columnas de manera sensible a mayúsculas y minúsculas
+            sorter.setRowFilter(RowFilter.regexFilter(texto));
+        } else {
+            // Buscar en una columna específica de manera sensible a mayúsculas y minúsculas
+            int columna = filtroSeleccionado - 1;  // Restar 1 porque el índice "Todos" es 0
+            sorter.setRowFilter(RowFilter.regexFilter(texto, columna));
+        }
     }
      
     private void manejoCiereVentana() {
@@ -63,6 +140,15 @@ public class datosVendedores extends javax.swing.JFrame {
 
         //obtenemos el modelo de la tabla
         DefaultTableModel modelo = (DefaultTableModel) tblListarVendedores.getModel();
+        
+        //configuramos el TableRowSorter
+        sorter = new TableRowSorter<>(modelo);
+        tblListarVendedores.setRowSorter(sorter);
+
+        //creamos un renderizador que centre el contenido
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        tblListarVendedores.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
         
         //limpiamos la tabla antes de agregar los nuevos datos
         modelo.setRowCount(0);
@@ -78,6 +164,8 @@ public class datosVendedores extends javax.swing.JFrame {
             }
             modelo.addRow(new Object[]{
                 vendedor.getId(),
+                vendedor.getNomUsuario(),
+                vendedor.getContrasenia(),
                 vendedor.getNombre(),
                 vendedor.getCedula(),
                 vendedor.getCorreo(),
@@ -104,7 +192,10 @@ public class datosVendedores extends javax.swing.JFrame {
         btnAltaVendedor1 = new javax.swing.JButton();
         btnModVendedor = new javax.swing.JButton();
         btnDeshVendedor = new javax.swing.JButton();
-        btnActualizar = new javax.swing.JButton();
+        jLabel2 = new javax.swing.JLabel();
+        txtBBusqueda = new javax.swing.JTextField();
+        jLabel3 = new javax.swing.JLabel();
+        cbFiltros = new javax.swing.JComboBox<>();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -113,11 +204,11 @@ public class datosVendedores extends javax.swing.JFrame {
 
             },
             new String [] {
-                "ID", "Nombre", "Cedula", "Correo Electronico", "Telefono", "Dirección", "Fecha de Contratacion", "Activo"
+                "ID", "Nombre Usuario", "Contraseña", "Nombre", "Cedula", "Correo Electronico", "Telefono", "Dirección", "Fecha de Contratacion", "Activo"
             }
         ) {
             Class[] types = new Class [] {
-                java.lang.Integer.class, java.lang.String.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+                java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.Integer.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
             };
 
             public Class getColumnClass(int columnIndex) {
@@ -128,8 +219,8 @@ public class datosVendedores extends javax.swing.JFrame {
         if (tblListarVendedores.getColumnModel().getColumnCount() > 0) {
             tblListarVendedores.getColumnModel().getColumn(0).setMinWidth(50);
             tblListarVendedores.getColumnModel().getColumn(0).setMaxWidth(60);
-            tblListarVendedores.getColumnModel().getColumn(7).setMinWidth(30);
-            tblListarVendedores.getColumnModel().getColumn(7).setMaxWidth(50);
+            tblListarVendedores.getColumnModel().getColumn(9).setMinWidth(30);
+            tblListarVendedores.getColumnModel().getColumn(9).setMaxWidth(50);
         }
 
         jLabel1.setFont(new java.awt.Font("Segoe UI", 1, 18)); // NOI18N
@@ -159,10 +250,21 @@ public class datosVendedores extends javax.swing.JFrame {
             }
         });
 
-        btnActualizar.setIcon(new javax.swing.ImageIcon(getClass().getResource("/Presentancion/Iconos/icons8-update-24.png"))); // NOI18N
-        btnActualizar.addActionListener(new java.awt.event.ActionListener() {
+        jLabel2.setText("Buscar:");
+
+        txtBBusqueda.setToolTipText("");
+        txtBBusqueda.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnActualizarActionPerformed(evt);
+                txtBBusquedaActionPerformed(evt);
+            }
+        });
+
+        jLabel3.setText("Filtrar:");
+
+        cbFiltros.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Todos", "ID", "Nombre Usuario", "Contraseña", "Nombre", "Cedula", "Correo Electronico", "Telefono", "Direccion", "Fecha de Contratacion", "Activo" }));
+        cbFiltros.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbFiltrosActionPerformed(evt);
             }
         });
 
@@ -177,36 +279,49 @@ public class datosVendedores extends javax.swing.JFrame {
                         .addComponent(jScrollPane1)
                         .addContainerGap())
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addGap(0, 81, Short.MAX_VALUE)
+                        .addGap(0, 169, Short.MAX_VALUE)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                                .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addGap(235, 235, 235)
-                                .addComponent(btnActualizar)
-                                .addContainerGap())
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(138, 138, 138))
+                                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                        .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, 233, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addGap(26, 26, 26)
+                                        .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                                .addGap(217, 217, 217))
                             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                                 .addComponent(btnAltaVendedor1, javax.swing.GroupLayout.PREFERRED_SIZE, 187, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(47, 47, 47)
                                 .addComponent(btnModVendedor, javax.swing.GroupLayout.PREFERRED_SIZE, 187, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(46, 46, 46)
                                 .addComponent(btnDeshVendedor)
-                                .addGap(52, 52, 52))))))
+                                .addGap(128, 128, 128))))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(btnActualizar)
-                    .addComponent(jLabel1))
+                .addContainerGap()
+                .addComponent(jLabel1)
                 .addGap(18, 18, 18)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 240, Short.MAX_VALUE)
-                .addGap(48, 48, 48)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(txtBBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cbFiltros, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2)
+                    .addComponent(jLabel3))
+                .addGap(30, 30, 30)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 289, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(btnAltaVendedor1, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnModVendedor, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnDeshVendedor, javax.swing.GroupLayout.PREFERRED_SIZE, 55, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(30, 30, 30))
+                .addGap(31, 31, 31))
         );
 
         pack();
@@ -225,11 +340,13 @@ public class datosVendedores extends javax.swing.JFrame {
 
         if (filaSeleccionada >= 0) {
             int id = (Integer) tblListarVendedores.getValueAt(filaSeleccionada, 0);
-            String nombre = (String) tblListarVendedores.getValueAt(filaSeleccionada, 1);
-            int cedula = (Integer) tblListarVendedores.getValueAt(filaSeleccionada, 2);
-            String correo = (String) tblListarVendedores.getValueAt(filaSeleccionada, 3);
-            String telefono = (String) tblListarVendedores.getValueAt(filaSeleccionada, 4);
-            String direccion = (String) tblListarVendedores.getValueAt(filaSeleccionada, 5);
+            String nomUsuario = (String) tblListarVendedores.getValueAt(filaSeleccionada, 1);
+            String contrasenia = (String) tblListarVendedores.getValueAt(filaSeleccionada, 2);
+            String nombre = (String) tblListarVendedores.getValueAt(filaSeleccionada, 3);
+            int cedula = (Integer) tblListarVendedores.getValueAt(filaSeleccionada, 4);
+            String correo = (String) tblListarVendedores.getValueAt(filaSeleccionada, 5);
+            String telefono = (String) tblListarVendedores.getValueAt(filaSeleccionada, 6);
+            String direccion = (String) tblListarVendedores.getValueAt(filaSeleccionada, 7);
 
         int confirmacion = JOptionPane.showConfirmDialog(this, 
                 "¿Está seguro de que desea modificar este vendedor?", 
@@ -239,6 +356,8 @@ public class datosVendedores extends javax.swing.JFrame {
         if (confirmacion == JOptionPane.YES_OPTION) {
             modificarVendedor ventanaModificacion = new modificarVendedor();
             ventanaModificacion.setId(id);
+            ventanaModificacion.setNombreUsuario(nomUsuario);
+            ventanaModificacion.setContrasenia(contrasenia);
             ventanaModificacion.setNombre(nombre);
             ventanaModificacion.setCedula(cedula);
             ventanaModificacion.setCorreo(correo);
@@ -289,9 +408,13 @@ public class datosVendedores extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_btnDeshVendedorActionPerformed
 
-    private void btnActualizarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnActualizarActionPerformed
-        cargarDatos();
-    }//GEN-LAST:event_btnActualizarActionPerformed
+    private void txtBBusquedaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtBBusquedaActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_txtBBusquedaActionPerformed
+
+    private void cbFiltrosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbFiltrosActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_cbFiltrosActionPerformed
 
     /**
      * @param args the command line arguments
@@ -329,12 +452,15 @@ public class datosVendedores extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnActualizar;
     private javax.swing.JButton btnAltaVendedor1;
     private javax.swing.JButton btnDeshVendedor;
     private javax.swing.JButton btnModVendedor;
+    private javax.swing.JComboBox<String> cbFiltros;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable tblListarVendedores;
+    private javax.swing.JTextField txtBBusqueda;
     // End of variables declaration//GEN-END:variables
 }
