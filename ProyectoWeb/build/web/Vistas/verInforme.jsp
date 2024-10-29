@@ -26,11 +26,11 @@
     </header>
 
     <div class="contenido">
-        <!-- Encabezado para la tabla de pedidos -->
+        <!-- Tabla de Pedidos -->
         <div class="text-center mt-4 p-3 border border-dark rounded" style="background-color: #f8f9fa;">
             <h2>Pedidos Hechos</h2>
         </div>
-        
+
         <table id="tablaPedidos" class="table table-striped table-hover table-bordered mx-auto">
             <thead class="table-dark">
                 <tr>
@@ -43,32 +43,19 @@
             </thead>
             <tbody>
                 <%
-                    // Obtener la lista de pedidos del atributo de la solicitud
                     ArrayList<Pedido> pedidos = (ArrayList<Pedido>) request.getAttribute("pedidos");
-                    ClienteServicios clienteServicios = new ClienteServicios(); // Servicio para obtener datos del cliente
+                    ClienteServicios clienteServicios = new ClienteServicios();
                     if (pedidos != null && !pedidos.isEmpty()) {
                         for (Pedido pedido : pedidos) {
-                            // Determinar el estado del pedido con un switch
                             String estadoPedido;
                             switch (pedido.getEstado()) {
-                                case EN_PREPARACION:
-                                    estadoPedido = "En Preparación";
-                                    break;
-                                case EN_VIAJE:
-                                    estadoPedido = "En Viaje";
-                                    break;
-                                case ENTREGADO:
-                                    estadoPedido = "Entregado";
-                                    break;
-                                case CANCELADO:
-                                    estadoPedido = "Cancelado";
-                                    break;
-                                default:
-                                    estadoPedido = "Estado Desconocido"; // Manejar un estado no esperado
-                                    break;
+                                case EN_PREPARACION: estadoPedido = "En Preparación"; break;
+                                case EN_VIAJE: estadoPedido = "En Viaje"; break;
+                                case ENTREGADO: estadoPedido = "Entregado"; break;
+                                case CANCELADO: estadoPedido = "Cancelado"; break;
+                                default: estadoPedido = "Estado Desconocido"; break;
                             }
 
-                            // Obtener el nombre del cliente usando el ID del pedido
                             String nombreCliente = clienteServicios.getNombreClientePorId(pedido.getIdCliente());
                 %>
                             <tr>
@@ -90,8 +77,8 @@
                 %>
             </tbody>
         </table>
-            
-        <!-- Encabezado para la tabla de productos vendidos -->
+
+        <!-- Tabla de Productos Vendidos -->
         <div class="text-center mt-4 p-3 border border-dark rounded" style="background-color: #f8f9fa;">
             <h2>Productos Vendidos</h2>
         </div>
@@ -108,14 +95,12 @@
             </thead>
             <tbody>
                 <%
-                    // Obtener los detalles agrupados de los pedidos
                     List<DetallePedido> detalles = (List<DetallePedido>) request.getAttribute("detalles");
-                    double totalIngresos = 0.0; // Inicializa el total de ingresos
+                    double totalIngresos = 0.0;
 
                     if (detalles != null && !detalles.isEmpty()) {
                         for (DetallePedido detalle : detalles) {
-                            // Sumar los ingresos
-                            totalIngresos += detalle.getCantidad() * detalle.getPrecioVenta(); 
+                            totalIngresos += detalle.getCantidad() * detalle.getPrecioVenta();
                 %>
                             <tr>
                                 <td><%= detalle.getProducto().getId() %></td>
@@ -137,9 +122,15 @@
             </tbody>
         </table>
 
-        <!-- Mostrar los ingresos generados con borde -->
+        <!-- Total Ingresos -->
         <div class="text-center mt-4 p-3 border border-dark rounded" style="background-color: #f8f9fa;">
             <h3>Ingresos Generados: $<%= totalIngresos %></h3>
+        </div>
+
+        <!-- Botón para Descargar PDF -->
+        <div class="descargar-pdf-container text-end mt-4">
+            <a href="<%= request.getContextPath() %>/descargarPDF?mes=<%= request.getParameter("mes") %>&anio=<%= request.getParameter("anio") %>&nombreCliente=<%= request.getParameter("nombreCliente") %>&nombreCategoria=<%= request.getParameter("nombreCategoria") %>" 
+               class="btn btn-descargar-pdf">Descargar PDF</a>
         </div>
     </div>
 
