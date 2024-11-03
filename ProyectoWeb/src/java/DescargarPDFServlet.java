@@ -41,31 +41,26 @@ public class DescargarPDFServlet extends HttpServlet {
         if (idVendedor != null) {
             String nombreCliente = request.getParameter("nombreCliente");
             String nombreCategoria = request.getParameter("nombreCategoria");
-            System.out.println("Filtro Cliente: " + nombreCliente + ", Filtro Categoria: " + nombreCategoria);
 
             try {
                 int mes = Integer.parseInt(request.getParameter("mes"));
                 int anio = Integer.parseInt(request.getParameter("anio"));
 
-                System.out.println("Mes: " + mes + ", Año: " + anio);
-
-                Integer clienteId = nombreCliente != null ? clienteServicios.obtenerIdPorNombre(nombreCliente) : null;
-                Integer categoriaId = nombreCategoria != null ? categoriaServicios.obtenerIdPorNombre(nombreCategoria) : null;
+                Integer clienteId = (nombreCliente != null && !nombreCliente.trim().isEmpty()) 
+                        ? clienteServicios.obtenerIdPorNombre(nombreCliente) : null;
+                Integer categoriaId = (nombreCategoria != null && !nombreCategoria.trim().isEmpty()) 
+                        ? categoriaServicios.obtenerIdPorNombre(nombreCategoria) : null;
 
                 List<Pedido> pedidosVendedor = obtenerPedidosFiltrados(idVendedor, mes, anio, clienteId, categoriaId);
-                System.out.println("Total pedidos obtenidos: " + pedidosVendedor.size());
-
                 List<DetallePedido> detallesAgrupados = agruparDetallesPedidos(pedidosVendedor);
-                System.out.println("Total detalles obtenidos: " + detallesAgrupados.size());
 
                 if (pedidosVendedor.isEmpty() || detallesAgrupados.isEmpty()) {
-                    System.out.println("No se encontraron datos para los filtros aplicados.");
+                    // Manejar caso sin datos
                 }
 
                 generarPDF(response, pedidosVendedor, detallesAgrupados);
             } catch (NumberFormatException | DocumentException e) {
                 response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Error al generar el PDF: " + e.getMessage());
-                e.printStackTrace();
             }
         } else {
             response.sendRedirect("Login.jsp");
@@ -110,15 +105,23 @@ public class DescargarPDFServlet extends HttpServlet {
         tablePedidos.addCell("ID");
         tablePedidos.addCell("Fecha");
         tablePedidos.addCell("Estado");
-        tablePedidos.addCell("Total");
+        tablePedidos.addCell("Subtotal");
         tablePedidos.addCell("Cliente");
 
         // Agregar datos de pedidos a la tabla
         for (Pedido pedido : pedidos) {
+            double subtotalPedido = 0;
+
+            // Calcular el subtotal del pedido sumando los subtotales de los detalles
+            List<DetallePedido> detallesPedido = detallePedidosServicios.obtenerDetallesPedido(pedido.getIdentificador());
+            for (DetallePedido detalle : detallesPedido) {
+                subtotalPedido += detalle.getPrecioVenta() * detalle.getCantidad();
+            }
+
             tablePedidos.addCell(String.valueOf(pedido.getIdentificador()));
             tablePedidos.addCell(pedido.getFechaPedido().toString());
-            tablePedidos.addCell(pedido.getEstado().toString());
-            tablePedidos.addCell(String.valueOf(pedido.getTotal()));
+            tablePedidos.addCell(traducirEstado(pedido.getEstado().toString()));
+            tablePedidos.addCell(String.valueOf(subtotalPedido)); // Usar el subtotal calculado aquí
             tablePedidos.addCell(clienteServicios.getNombreClientePorId(pedido.getIdCliente()));
         }
 
@@ -136,26 +139,49 @@ public class DescargarPDFServlet extends HttpServlet {
         tableDetalles.addCell("Cantidad");
         tableDetalles.addCell("Precio Venta");
 
-        // Agregar datos de detalles a la tabla
+        // Calcular ingresos generados
+        double ingresosGenerados = 0;
+
+        // Agregar datos de detalles a la tabla y calcular ingresos generados
         for (DetallePedido detalle : detalles) {
             tableDetalles.addCell(String.valueOf(detalle.getProducto().getId()));
             tableDetalles.addCell(detalle.getProducto().getNombre());
             tableDetalles.addCell(detalle.getProducto().getDescripcion());
             tableDetalles.addCell(String.valueOf(detalle.getCantidad()));
             tableDetalles.addCell(String.valueOf(detalle.getPrecioVenta()));
+
+            // Calcular subtotal y acumular en ingresosGenerados
+            double subtotal = detalle.getPrecioVenta() * detalle.getCantidad();
+            ingresosGenerados += subtotal;
+            System.out.println("Subtotal para " + detalle.getProducto().getNombre() + ": " + subtotal);
         }
 
         document.add(tableDetalles);
         document.add(new Paragraph(" "));
 
-        // Calcular ingresos generados
-        double ingresosGenerados = 0;
-        for (DetallePedido detalle : detalles) {
-            ingresosGenerados += detalle.getPrecioVenta() * detalle.getCantidad();
-        }
+        // Imprimir el total en consola
+        System.out.println("Total Ingresos Generados: $" + ingresosGenerados);
 
+        // Agregar total al PDF
         document.add(new Paragraph("Ingresos Generados: $" + ingresosGenerados));
-
         document.close();
+    }
+
+
+
+    // Método para traducir el estado del pedido
+    private String traducirEstado(String estado) {
+        switch (estado) {
+            case "EN_PREPARACION":
+                return "En preparación";
+            case "CANCELADO":
+                return "Cancelado";
+            case "ENTREGADO":
+                return "Entregado";
+            case "EN_VIAJE":
+                return "En viaje";
+            default:
+                return estado;
+        }
     }
 }

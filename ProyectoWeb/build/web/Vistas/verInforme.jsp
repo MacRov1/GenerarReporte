@@ -10,6 +10,15 @@
 <%@page import="logica.servicios.ClienteServicios"%>
 <%@page import="logica.Clases.Pedido"%>
 <%@page import="java.util.ArrayList"%>
+<%
+    //verifica si hay una sesión activa
+    if (session == null || session.getAttribute("usuario") == null) {
+        //redirige a Login.jsp si el usuario no está autenticado
+        response.sendRedirect("Login.jsp");
+        return;
+    }
+%>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>

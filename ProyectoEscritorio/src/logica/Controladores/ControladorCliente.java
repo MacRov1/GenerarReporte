@@ -112,4 +112,9 @@ public class ControladorCliente implements IControladorCliente {
     public List<String> obtenerNombresClientesActivos(){
         return ClienteServicios.obtenerNombresClientesActivos();
     }
+    
+    @Override
+    public ArrayList<Cliente> getClientesActivos(){
+        return ClienteServicios.getClientesActivos();
+    }
 }

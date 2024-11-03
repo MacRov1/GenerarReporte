@@ -28,5 +28,5 @@ public interface IControladorCliente {
     public abstract String obtenerNombreClientePorId(int idCliente);
     public abstract List<String> obtenerNombresClientes();
     public abstract List<String> obtenerNombresClientesActivos();
-    
+    public abstract ArrayList<Cliente> getClientesActivos();
 }

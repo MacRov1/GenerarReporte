@@ -78,4 +78,9 @@ public class ControladorPedido implements IControladorPedido {
     public ArrayList<Pedido> getPedidosPorVendedorClienteYFecha(int idVendedor, int clienteId, int mes, int año){
         return servicioPedidos.getPedidosPorVendedorClienteYFecha(idVendedor, clienteId, mes, año);
     }
+    
+    @Override
+    public boolean cancelarPedido(int idPedido){
+        return servicioPedidos.cancelarPedido(idPedido);
+    }
 }

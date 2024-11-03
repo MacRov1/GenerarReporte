@@ -3,7 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/logica/servicios/PedidosServicios.java</file>
+            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/Presentancion/Vendedores/aniadirVendedor.java</file>
+            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/logica/Clases/Vendedor.java</file>
+            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/Persistencia/ConexionDB.java</file>
+            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/logica/Interfaces/IControladorVendedor.java</file>
+            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/logica/servicios/VendedorServicios.java</file>
+            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/Persistencia/Seguridad.java</file>
+            <file>file:/C:/Users/macro/Desktop/NuevoProyecto/GenerarReporte/ProyectoEscritorio/src/logica/Controladores/ControladorVendedor.java</file>
         </group>
     </open-files>
 </project-private>

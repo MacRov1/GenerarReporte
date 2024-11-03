@@ -18,6 +18,10 @@ public class DetallePedido {
     private int pedidoID;
     private List<Proveedor> proveedores;
     
+    public DetallePedido() {
+        
+    }
+    
     public DetallePedido(int cantidad, float precioVenta, Producto producto, int pedidoID) {
         this.cantidad = cantidad;
         this.precioVenta = precioVenta;

@@ -12,7 +12,6 @@ import logica.Clases.DetallePedido;
 import logica.Clases.Pedido;
 import logica.Clases.Pedido.Estado;
 
-
 /**
  *
  * @author Mateo
@@ -381,8 +380,17 @@ public class PedidosServicios {
         }
         return pedidos;
     }
-    
+
+    public boolean cancelarPedido(int idPedido) {
+        // Verificamos si el pedido existe y si está en un estado que pueda ser cancelado
+        Pedido pedido = obtenerPedidoPorId(idPedido);
+
+        if (pedido != null && pedido.getEstado() != Estado.CANCELADO) {
+            return actualizarEstadoPedido(idPedido, "CANCELADO");
+        } else {
+            System.out.println("El pedido no existe o ya está cancelado.");
+            return false;
+        }
+    }
+
 }
-
-
-

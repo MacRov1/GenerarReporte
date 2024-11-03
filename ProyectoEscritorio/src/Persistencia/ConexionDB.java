@@ -1,5 +1,5 @@
 package Persistencia;
- 
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,61 +12,52 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
-
 public class ConexionDB {
-    private final String host= "localhost";
-    private final String port= "3306";
-    private final String db= "progAplic";
-    private final String user= "root";
-    private final String pass= "";
-   
+    private String host;
+    private String port;
+    private String db;
+    private String user;
+    private String pass;
     
-    //Para hacer ConexionDB singleton descomentar
-    //private static Connection conexion=null;
-    private Connection conexion=null;
-    //Para hacer ConexionDB singleton descomentar
-    //private ConexionDB(){};
-    public ConexionDB(){};
-    //Para hacer ConexionDB singleton descomentar
-    //public static Connection getConexion() {
+    private Connection conexion = null;
+
+    public ConexionDB() {
+        // Leer las propiedades desde el archivo Config.properties
+        host = LeerProperties("host");
+        port = LeerProperties("port");
+        db = LeerProperties("db");
+        user = LeerProperties("user");
+        pass = LeerProperties("pass");
+    }
     
     public String LeerProperties(String caso) {
-        
         Properties prop = new Properties();
         InputStream archivo = null;
 
         try {
             archivo = new FileInputStream(System.getProperty("user.dir") + "\\Config.properties");
-            System.out.println(archivo);
             prop.load(archivo);
-
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, e.getMessage());
-        }     
+        } finally {
+            if (archivo != null) {
+                try {
+                    archivo.close(); // Cerrar el archivo después de usarlo
+                } catch (IOException e) {
+                    JOptionPane.showMessageDialog(null, e.getMessage());
+                }
+            }
+        }
         
-        switch (caso) {
-            case "host":  return prop.getProperty("host");
-       
-            case "port":  return prop.getProperty("port");
-                     
-            case "db":  return prop.getProperty("db");
-                     
-            case "user":  return prop.getProperty("user");
-                     
-            case "pass":  return prop.getProperty("pass");
-
-            default: return "";
-              
-        }     
+        return prop.getProperty(caso, ""); // Devuelve vacío si la propiedad no se encuentra
     }
    
     public Connection getConexion() {
-           
         if (conexion == null) {
             try {
                 Driver driver = new com.mysql.cj.jdbc.Driver();
                 DriverManager.registerDriver(driver);
-                conexion = DriverManager.getConnection("jdbc:mysql://"+host+":"+port+"/"+db, user, pass);
+                conexion = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/" + db, user, pass);
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 Logger.getLogger(ConexionDB.class.getName()).log(Level.SEVERE, null, ex);
@@ -75,7 +66,7 @@ public class ConexionDB {
         return conexion;
     }
     
-    public void cerrar(){
+    public void cerrar() {
         if (conexion != null) {
             try {
                 conexion.close();
@@ -85,5 +76,4 @@ public class ConexionDB {
             }
         }        
     }
-    
 }

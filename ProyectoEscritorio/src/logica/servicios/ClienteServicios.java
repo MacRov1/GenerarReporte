@@ -31,7 +31,7 @@ public class ClienteServicios {
                 String email = rs.getString("correo_electronico");
                 String rut = rs.getString("num_rut");
                 String telefono = rs.getString("telefono");
-                Date fechaRegistro = rs.getDate("fecha_registro"); // Asumiendo que el campo en la DB es 'fecha_registro'
+                Date fechaRegistro = rs.getDate("fecha_registro");
                 Boolean activo = rs.getBoolean("Activo");
                 
                 Cliente cliente = new Cliente(nombre, email, rut, telefono, fechaRegistro, activo);
@@ -215,6 +215,29 @@ public class ClienteServicios {
         }
         return nombres;
     }
+    
+    public ArrayList<Cliente> getClientesActivos() {
+        ArrayList<Cliente> resultado = new ArrayList<Cliente>();
+        try {
+            PreparedStatement status = conexion.prepareStatement("SELECT * FROM cliente WHERE Activo = 1");
+            ResultSet rs = status.executeQuery();
+            while (rs.next()) {
+                // Leer los datos del ResultSet y crear un objeto Cliente
+                String nombre = rs.getString("nom_empresa");
+                String email = rs.getString("correo_electronico");
+                String rut = rs.getString("num_rut");
+                String telefono = rs.getString("telefono");
+                Date fechaRegistro = rs.getDate("fecha_registro");
+                Boolean activo = rs.getBoolean("Activo");
+                
+                Cliente cliente = new Cliente(nombre, email, rut, telefono, fechaRegistro, activo);
+                resultado.add(cliente);
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+        return resultado;
+    }
 
     public int obtenerIdPorNombre(String nombreCliente) {
         String sql = "SELECT ID FROM cliente WHERE nom_empresa = ?";
@@ -235,4 +258,6 @@ public class ClienteServicios {
             return -1; // Retorna -1 en caso de error
         }
     }
+
+
 }
